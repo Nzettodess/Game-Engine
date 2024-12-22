@@ -50,7 +50,8 @@
 			"stdexcept": "cpp",
 			"streambuf": "cpp",
 			"cinttypes": "cpp",
-			"typeinfo": "cpp"
+			"typeinfo": "cpp",
+			"regex": "cpp"
 		},
 		"vcpkg.target.defaultTriplet": "arm-neon-android",
 		"vcpkg.target.hostTriplet": "arm-neon-android",
