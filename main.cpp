@@ -1,43 +1,53 @@
-#include <iostream>
-#include <raylib.h>
+#define _CRT_SECURE_NO_WARNINGS  // Disable deprecation warnings for sprintf, fopen, etc.
+#include "raylib.h"
 
-using namespace std;
+#define RAYGUI_IMPLEMENTATION
 
-int main () {
+#include "raygui.h"
 
-    const int SCREEN_WIDTH = 800;
-    const int SCREEN_HEIGHT = 600;
-    int ball_x = 100;
-    int ball_y = 100;
-    int ball_speed_x = 5;
-    int ball_speed_y = 5;
-    int ball_radius = 15;
+int main()
+{
+    InitWindow(800, 450, "Raylib + RayGUI Example");
 
-    cout << "Hello World" << endl;
+    SetTargetFPS(60);  // Set the game to run at 60 frames per second
 
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "My first RAYLIB program!");
-    SetTargetFPS(60);
+    bool showMessageBox = false;  // Track if message box should be shown
+    int messageBoxResult = -1;    // Store message box result
 
-    while (WindowShouldClose() == false){
-   
-        ball_x += ball_speed_x;
-        ball_y += ball_speed_y;
-
-        if(ball_x + ball_radius >= SCREEN_WIDTH || ball_x - ball_radius <= 0)
+    while (!WindowShouldClose())  // Detect window close button or ESC key
+    {
+        // Check if the button is clicked, and show the message box if true
+        if (GuiButton(Rectangle{ 350, 200, 100, 30 }, "Show Message"))
         {
-            ball_speed_x *= -1;
+            showMessageBox = true;
         }
 
-        if(ball_y + ball_radius >= SCREEN_HEIGHT || ball_y - ball_radius <= 0)
+        // Show message box and handle response if it’s displayed
+        if (showMessageBox)
         {
-            ball_speed_y *= -1;
+            messageBoxResult = GuiMessageBox(Rectangle{ 250, 350, 300, 100 }, "Message Box", "Hello! This is RayGUI in action!", "OK;Cancel");
+
+            // If OK or Cancel is clicked, close the message box
+            if (messageBoxResult >= 0)
+            {
+                showMessageBox = false;
+                messageBoxResult = -1;  // Reset message box result
+            }
         }
-        
+
+        // Drawing logic
         BeginDrawing();
-            ClearBackground(BLACK);
-            DrawCircle(ball_x,ball_y,ball_radius, WHITE);
+        ClearBackground(RAYWHITE);  // Clear the screen with a white background
+
+        // Draw some text and the button
+        DrawText("Click the button to show a message box!", 220, 170, 20, DARKGRAY);
+        GuiButton(Rectangle{ 350, 200, 100, 30 }, "Show Message");
+
         EndDrawing();
     }
 
-    CloseWindow();
+    // De-initialization
+    CloseWindow();  // Close window and OpenGL context
+
+    return 0;
 }
