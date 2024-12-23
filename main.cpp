@@ -7,8 +7,9 @@
 #include "raygui.h"
 #include "raymath.h"
 
-// Define program states
-typedef enum { MAIN_MENU, GAME } GameState;
+const int screenWidth = 1720;
+const int screenHeight = 880;
+// Remove GameState enum and related logic as we go directly into the game scene
 
 void DrawUnlimitedGrid(int gridSize, float gridStep) {
     // Draw the major grid lines (larger divisions)
@@ -28,16 +29,32 @@ void DrawUnlimitedGrid(int gridSize, float gridStep) {
         }
     }
 }
+void DrawInfoPane(bool isCameraMode, float rotationSpeed, float panSpeed) {
 
+            int panelWidth = 300;  // Width of the right panel
+            int panelX = screenWidth - panelWidth;
 
+            if(isCameraMode){
+            DrawRectangle(panelX, 0, panelWidth, screenHeight, BLACK);  // Draw panel background
+            DrawText("Camera Settings", panelX + 10, 10, 20, DARKGRAY);
+
+            // Adjust rotation speed
+            DrawText("Rotation Speed", panelX + 10, 50, 16, DARKGRAY);
+            rotationSpeed = GuiSliderBar((Rectangle){ (float)(panelX + 10), 70.0f, 280.0f, 20.0f }, NULL, NULL, &rotationSpeed, 0.1f, 2.0f);
+           
+            // Adjust pan speed
+            DrawText("Pan Speed", panelX + 10, 110, 16, DARKGRAY);
+            panSpeed = GuiSliderBar((Rectangle){ (float)(panelX + 10), 130.0f, 280.0f, 20.0f }, NULL, NULL, &panSpeed, 0.001f, 0.1f);
+            }
+           
+
+}
 int main()
 {
-    const int screenWidth = 800;
-    const int screenHeight = 450;
-
-    InitWindow(screenWidth, screenHeight, "Develop Game Engine");
+    InitWindow(screenWidth, screenHeight, "Game Engine by Stellar Blade");
 
     // Define the camera to look into our 3d world (position, target, up vector)
+    bool isCameraMode = false;
     Camera camera = {0};
     camera.position = (Vector3){ 8.0f, 6.0f, 8.0f };    // Camera position
     camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
@@ -47,123 +64,100 @@ int main()
 
     SetTargetFPS(60);  // Set the game to run at 60 frames per second
 
-    GameState currentState = MAIN_MENU;  // Start in the main menu state
-
     while (!WindowShouldClose())  // Detect window close button or ESC key
     {
-        // Handle input and state transitions
-        if (currentState == MAIN_MENU)
-        {
-            // Check if the "Start" button is clicked
-            if (GuiButton(Rectangle{ 350, 200, 100, 30 }, "Start"))
-            {
-                currentState = GAME;  // Change state to GAME when Start is clicked
-            }
+        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
+            isCameraMode = true;
+        }else{
+            isCameraMode = true;
         }
-        else if (currentState == GAME)
-        {
-       if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
-    Vector2 mouseDelta = GetMouseDelta();  // Get the mouse delta
 
-    // Define sensitivity for rotation and pan
-    float rotationSpeed = 0.5f;   // Adjust for orbiting speed
-    float panSpeed = 0.01f;       // Adjust for panning speed
+        if(isCameraMode){
+        Vector2 mouseDelta = GetMouseDelta();  // Get the mouse delta
 
-    // Check if Shift is held for panning; otherwise, orbit
-    if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
-        // Panning: Adjust camera position and target
-        Vector3 right = Vector3Normalize(Vector3CrossProduct(camera.up, Vector3Subtract(camera.target, camera.position)));
-        Vector3 up = camera.up;
+            // Define sensitivity for rotation and pan
+            float rotationSpeed = 0.4f;   // Adjust for orbiting speed
+            float panSpeed = 0.01f;       // Adjust for panning speed
 
-        Vector3 panOffset = Vector3Add(
-            Vector3Scale(right, -mouseDelta.x * panSpeed),
-            Vector3Scale(up, mouseDelta.y * panSpeed)
+            // Check if Shift is held for panning; otherwise, orbit
+            if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
+                // Panning: Adjust camera position and target
+                Vector3 right = Vector3Normalize(Vector3CrossProduct(camera.up, Vector3Subtract(camera.target, camera.position)));
+                Vector3 up = camera.up;
+
+                Vector3 panOffset = Vector3Add(
+                    Vector3Scale(right, -mouseDelta.x * panSpeed),
+                    Vector3Scale(up, mouseDelta.y * panSpeed)
+                );
+
+                camera.position = Vector3Add(camera.position, panOffset);
+                camera.target = Vector3Add(camera.target, panOffset);
+            } else {
+                // Orbiting: Rotate camera around the target
+                Vector3 direction = Vector3Subtract(camera.position, camera.target);
+
+                // Calculate yaw (horizontal) and pitch (vertical) rotations
+                float yaw = -mouseDelta.x * rotationSpeed * DEG2RAD;
+                float pitch = -mouseDelta.y * rotationSpeed * DEG2RAD;
+
+                // Apply rotations using spherical coordinates
+                Matrix rotationMatrix = MatrixRotateXYZ((Vector3){ pitch, yaw, 0.0f });
+                direction = Vector3Transform(direction, rotationMatrix);
+
+                // Update camera position based on the rotated direction
+                camera.position = Vector3Add(camera.target, direction);
+
+                // Prevent excessive pitch (clamping vertical rotation)
+                if (fabsf(Vector3Angle(direction, camera.up) - PI/2) > PI/3) {
+                    camera.position.y = camera.target.y; // Reset to avoid flipping
+                }
+                
+            }
+            // Update camera projection for movement
+        UpdateCameraPro(&camera,
+            (Vector3){
+                (IsKeyDown(KEY_W)) * 0.1f - (IsKeyDown(KEY_S)) * 0.1f,  // Move forward-backward
+                (IsKeyDown(KEY_D)) * 0.1f - (IsKeyDown(KEY_A)) * 0.1f,  // Move right-left
+                0.0f  // Move up-down
+            },
+            (Vector3){ 0.0f, 0.0f, 0.0f },  // No rotation (set all to 0)
+            GetMouseWheelMove() * 2.0f  // Adjust camera zoom based on mouse wheel movement
         );
 
-        camera.position = Vector3Add(camera.position, panOffset);
-        camera.target = Vector3Add(camera.target, panOffset);
-    } else {
-        // Orbiting: Rotate camera around the target
-        Vector3 direction = Vector3Subtract(camera.position, camera.target);
-
-        // Calculate yaw (horizontal) and pitch (vertical) rotations
-        float yaw = -mouseDelta.x * rotationSpeed * DEG2RAD;
-        float pitch = -mouseDelta.y * rotationSpeed * DEG2RAD;
-
-        // Apply rotations using spherical coordinates
-        Matrix rotationMatrix = MatrixRotateXYZ((Vector3){ pitch, yaw, 0.0f });
-        direction = Vector3Transform(direction, rotationMatrix);
-
-        // Update camera position based on the rotated direction
-        camera.position = Vector3Add(camera.target, direction);
-
-        // Prevent excessive pitch (clamping vertical rotation)
-        if (fabsf(Vector3Angle(direction, camera.up) - PI/2) > PI/3) {
-            camera.position.y = camera.target.y; // Reset to avoid flipping
+        // Camera movement along the y-axis when Q and E are pressed (up and down)
+        if (IsKeyDown(KEY_Q)) {
+            camera.position.y -= 0.1f;  // Move the camera downwards
+            camera.target.y -= 0.1f;
         }
-    }
-}
+        if (IsKeyDown(KEY_E)) {
 
-// Update camera projection for movement
-UpdateCameraPro(&camera,
-    (Vector3){
-        (IsKeyDown(KEY_W)) * 0.1f - (IsKeyDown(KEY_S)) * 0.1f,  // Move forward-backward
-        (IsKeyDown(KEY_D)) * 0.1f - (IsKeyDown(KEY_A)) * 0.1f,  // Move right-left
-        0.0f  // Move up-down
-    },
-    (Vector3){ 0.0f, 0.0f, 0.0f },  // No rotation (set all to 0)
-    GetMouseWheelMove() * 2.0f  // Adjust camera zoom based on mouse wheel movement
-);
-
-// Camera movement along the y-axis when Q and E are pressed (up and down)
-if (IsKeyDown(KEY_Q)) {
-    camera.position.y -= 0.1f;  // Move the camera downwards
-    camera.target.y -= 0.1f;
-}
-if (IsKeyDown(KEY_E)) {
-    camera.position.y += 0.1f;  // Move the camera upwards
-    camera.target.y += 0.1f;
-}
-
-
-
-
-            // If you want to go back to the main menu, you can use Escape key
-            if (IsKeyPressed(KEY_ESCAPE))
-            {
-                currentState = MAIN_MENU;
-            }
+            camera.position.y += 0.1f;  // Move the camera upwards
+            camera.target.y += 0.1f;
         }
 
+         DrawInfoPane(isCameraMode, rotationSpeed, panSpeed);
+        }
+        
         // Drawing logic
         BeginDrawing();
         ClearBackground(RAYWHITE);  // Clear the screen with a white background
 
-        if (currentState == MAIN_MENU)
-        {
-            // Draw the main menu text and button
-            DrawText("Click 'Start' to Enter the Game Engine", 220, 170, 20, DARKGRAY);
-            GuiButton(Rectangle{ 350, 200, 100, 30 }, "Start");
-        }
-        else if (currentState == GAME)
-        {
-            // Begin 3D mode for the blank canvas
-            BeginMode3D(camera);
+        // Begin 3D mode for the game scene
+        BeginMode3D(camera);
 
-            // Draw grid in 3D space
-             DrawUnlimitedGrid(GRID_SIZE, GRID_STEP);  // Drawing the "unlimited" grid
+        // Draw grid in 3D space
+        DrawUnlimitedGrid(GRID_SIZE, GRID_STEP);  // Drawing the "unlimited" grid
 
-            // Optionally, you can add 3D objects like cubes or spheres to your scene:
-            DrawCube((Vector3){ 0.0f, 1.0f, 0.0f }, 2.0f, 2.0f, 2.0f, BLUE);
+        // Optionally, you can add 3D objects like cubes or spheres to your scene:
+        DrawCube((Vector3){ 0.0f, 1.0f, 0.0f }, 2.0f, 2.0f, 2.0f, BLUE);
 
-            EndMode3D();
-            // Draw the blank canvas (just a white background for now)
-            DrawText("WASDQE, SHIFT AND WHEEL TO CONTROL CAMERA ", 250, 20, 20, DARKGRAY);
-        }
+        EndMode3D();
+        // Draw the blank canvas (just a white background for now)
+        DrawText("Hold RMB to Enter CAMERA Mode", 250, 20, 20, DARKGRAY);
 
         EndDrawing();
-    }
-
+    
+}
     // De-initialization
     CloseWindow();  // Close window and OpenGL context
 
