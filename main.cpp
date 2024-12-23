@@ -29,7 +29,7 @@ void DrawUnlimitedGrid(int gridSize, float gridStep) {
         }
     }
 }
-void DrawInfoPane(bool isCameraMode, float* rotationSpeed, float* panSpeed) {
+void DrawInfoPane(bool isCameraMode, float* rotationSpeed, float* panSpeed, float* fov, int* projection) {
     int panelWidth = 400;  // Width of the right panel
     int panelX = screenWidth - panelWidth;
     DrawRectangle(panelX, 0, panelWidth, screenHeight, BLACK);
@@ -48,10 +48,21 @@ void DrawInfoPane(bool isCameraMode, float* rotationSpeed, float* panSpeed) {
         DrawText("Pan Speed", panelX + 10, 110, 16, WHITE);
         GuiSliderBar((Rectangle){ (float)(panelX + 10), 130.0f, 380.0f, 20.0f }, NULL, NULL, panSpeed, 0.001f, 0.1f);
 
+         DrawText("Camera FOV", panelX + 10, 170, 16, WHITE);
+        GuiSliderBar((Rectangle){ (float)(panelX + 10), 190.0f, 380.0f, 20.0f }, NULL, NULL, fov, 30.0f, 120.0f);
+
+        // Camera projection mode selection
+        DrawText("Projection Mode", panelX + 10, 230, 16, WHITE);
+        if (GuiButton((Rectangle){ panelX + 10, 250.0f, 180.0f, 30.0f }, "Perspective")) {
+            *projection = CAMERA_PERSPECTIVE;
+        }
+        if (GuiButton((Rectangle){ panelX + 210, 250.0f, 180.0f, 30.0f }, "Orthographic")) {
+            *projection = CAMERA_ORTHOGRAPHIC;
+        }
         // Display instructions
-        DrawText("WASD To Move, QE To Up/Down,", panelX + 10, 200, 20, WHITE);
-        DrawText("MouseWheel To Zoom In/Out", panelX + 10, 230, 20, WHITE);
-        DrawText("Zero to Exit CAMERA Mode", panelX + 10, 260, 20, WHITE);
+        DrawText("WASD To Move, QE To Up/Down,", panelX + 10, 300, 20, WHITE);
+        DrawText("MouseWheel To Zoom In/Out", panelX + 10, 330, 20, WHITE);
+        DrawText("Zero to Exit CAMERA Mode", panelX + 10, 360, 20, WHITE);
     }
 }
 
@@ -69,6 +80,8 @@ int main()
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
     float rotationSpeed = 0.4f;   // Adjust for orbiting speed
     float panSpeed = 0.01f;       // Adjust for panning speed
+    float fov = 60.0f;            // Field of view
+    int projection = CAMERA_PERSPECTIVE; // Projection type
 
 
     SetTargetFPS(60);  // Set the game to run at 60 frames per second
@@ -146,7 +159,9 @@ int main()
             camera.target.y += 0.1f;
         }
         }
-        
+                // Update FOV and projection mode based on GUI
+        camera.fovy = fov;
+        camera.projection = projection;
         // Drawing logic
         BeginDrawing();
         ClearBackground(RAYWHITE);  // Clear the screen with a white background
@@ -162,10 +177,10 @@ int main()
 
         EndMode3D();
 
-        DrawInfoPane(isCameraMode, &rotationSpeed, &panSpeed);
+        DrawInfoPane(isCameraMode, &rotationSpeed, &panSpeed, &fov, &projection);
 
         if(isCameraMode){
-            DrawInfoPane(isCameraMode, &rotationSpeed, &panSpeed);
+            DrawInfoPane(isCameraMode, &rotationSpeed, &panSpeed, &fov, &projection);
         }
         // Draw the blank canvas (just a white background for now)
         // DrawText("Hold RMB to Enter CAMERA Mode", 250, 20, 20, DARKGRAY);
