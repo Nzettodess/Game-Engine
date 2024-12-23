@@ -29,26 +29,32 @@ void DrawUnlimitedGrid(int gridSize, float gridStep) {
         }
     }
 }
-void DrawInfoPane(bool isCameraMode, float rotationSpeed, float panSpeed) {
+void DrawInfoPane(bool isCameraMode, float* rotationSpeed, float* panSpeed) {
+    int panelWidth = 400;  // Width of the right panel
+    int panelX = screenWidth - panelWidth;
+    DrawRectangle(panelX, 0, panelWidth, screenHeight, BLACK);
 
-            int panelWidth = 300;  // Width of the right panel
-            int panelX = screenWidth - panelWidth;
+    if (!isCameraMode) {
+        DrawText("Information Pane", panelX + 10, 10, 20, WHITE);
+        DrawText("Press RMB to Enter CAMERA Mode", panelX + 10, 50, 20, WHITE);
+    } else {
+        DrawText("Camera Settings", panelX + 10, 10, 20, WHITE);
 
-            if(isCameraMode){
-            DrawRectangle(panelX, 0, panelWidth, screenHeight, BLACK);  // Draw panel background
-            DrawText("Camera Settings", panelX + 10, 10, 20, DARKGRAY);
+        // Adjust rotation speed
+        DrawText("Rotation Speed", panelX + 10, 50, 16, WHITE);
+        GuiSliderBar((Rectangle){ (float)(panelX + 10), 70.0f, 380.0f, 20.0f }, NULL, NULL, rotationSpeed, 0.1f, 2.0f);
 
-            // Adjust rotation speed
-            DrawText("Rotation Speed", panelX + 10, 50, 16, DARKGRAY);
-            rotationSpeed = GuiSliderBar((Rectangle){ (float)(panelX + 10), 70.0f, 280.0f, 20.0f }, NULL, NULL, &rotationSpeed, 0.1f, 2.0f);
-           
-            // Adjust pan speed
-            DrawText("Pan Speed", panelX + 10, 110, 16, DARKGRAY);
-            panSpeed = GuiSliderBar((Rectangle){ (float)(panelX + 10), 130.0f, 280.0f, 20.0f }, NULL, NULL, &panSpeed, 0.001f, 0.1f);
-            }
-           
+        // Adjust pan speed
+        DrawText("Pan Speed", panelX + 10, 110, 16, WHITE);
+        GuiSliderBar((Rectangle){ (float)(panelX + 10), 130.0f, 380.0f, 20.0f }, NULL, NULL, panSpeed, 0.001f, 0.1f);
 
+        // Display instructions
+        DrawText("WASD To Move, QE To Up/Down,", panelX + 10, 200, 20, WHITE);
+        DrawText("MouseWheel To Zoom In/Out", panelX + 10, 230, 20, WHITE);
+        DrawText("Zero to Exit CAMERA Mode", panelX + 10, 260, 20, WHITE);
+    }
 }
+
 int main()
 {
     InitWindow(screenWidth, screenHeight, "Game Engine by Stellar Blade");
@@ -61,23 +67,28 @@ int main()
     camera.up = (Vector3){ 0.0f, 1.0f, 0.0f };          // Camera up vector (rotation towards target)
     camera.fovy = 60.0f;                                // Camera field-of-view Y
     camera.projection = CAMERA_PERSPECTIVE;             // Camera projection type
+    float rotationSpeed = 0.4f;   // Adjust for orbiting speed
+    float panSpeed = 0.01f;       // Adjust for panning speed
+
 
     SetTargetFPS(60);  // Set the game to run at 60 frames per second
 
     while (!WindowShouldClose())  // Detect window close button or ESC key
     {
-        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)){
-            isCameraMode = true;
-        }else{
+        if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
             isCameraMode = true;
         }
+        else if (IsKeyPressed(KEY_ZERO)){
+             isCameraMode = false;
+         }
 
         if(isCameraMode){
+
         Vector2 mouseDelta = GetMouseDelta();  // Get the mouse delta
 
             // Define sensitivity for rotation and pan
-            float rotationSpeed = 0.4f;   // Adjust for orbiting speed
-            float panSpeed = 0.01f;       // Adjust for panning speed
+            // float rotationSpeed = 0.4f;   // Adjust for orbiting speed
+            // float panSpeed = 0.01f;       // Adjust for panning speed
 
             // Check if Shift is held for panning; otherwise, orbit
             if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
@@ -134,8 +145,6 @@ int main()
             camera.position.y += 0.1f;  // Move the camera upwards
             camera.target.y += 0.1f;
         }
-
-         DrawInfoPane(isCameraMode, rotationSpeed, panSpeed);
         }
         
         // Drawing logic
@@ -152,8 +161,14 @@ int main()
         DrawCube((Vector3){ 0.0f, 1.0f, 0.0f }, 2.0f, 2.0f, 2.0f, BLUE);
 
         EndMode3D();
+
+        DrawInfoPane(isCameraMode, &rotationSpeed, &panSpeed);
+
+        if(isCameraMode){
+            DrawInfoPane(isCameraMode, &rotationSpeed, &panSpeed);
+        }
         // Draw the blank canvas (just a white background for now)
-        DrawText("Hold RMB to Enter CAMERA Mode", 250, 20, 20, DARKGRAY);
+        // DrawText("Hold RMB to Enter CAMERA Mode", 250, 20, 20, DARKGRAY);
 
         EndDrawing();
     
