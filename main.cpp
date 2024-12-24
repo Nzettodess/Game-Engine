@@ -6,10 +6,81 @@
 #include "raylib.h"
 #include "raygui.h"
 #include "raymath.h"
+#include <stdlib.h> 
 
 const int screenWidth = 1720;
 const int screenHeight = 880;
-// Remove GameState enum and related logic as we go directly into the game scene
+
+//Shape Struct
+typedef struct {
+    Vector3 position;
+    Vector3 size;
+    Color color;
+} Cube;
+typedef struct {
+    Vector3 position;
+    float radius;
+    Color color;
+} Sphere;
+typedef struct {
+    Vector3 position;
+    float radiusTop;
+    float radiusBottom;
+    float height;
+    int slices;
+    Color color;
+} Cylinder;
+typedef struct {
+    Vector3 startPos; // Starting position of the capsule
+    Vector3 endPos;   // Ending position of the capsule
+    float radius;     // Radius of the capsule
+    int slices;       // Number of slices (longitudinal divisions)
+    int rings;        // Number of rings (latitudinal divisions)
+    Color color;      // Color of the capsule
+} Capsule;
+typedef struct {
+    Vector3 position;
+    Vector2 size;
+    Color color;
+} Plane;
+
+Cube* cubes = NULL;
+int cubeCount = 0;
+Sphere* spheres = NULL;
+int sphereCount = 0;
+Cylinder* cylinders = NULL;
+int cylinderCount = 0;
+Capsule* capsules = NULL;
+int capsuleCount = 0;
+Plane* planes = NULL;
+int planeCount = 0;
+
+// Function to add a cube
+void AddCube(Vector3 position, Vector3 size, Color color) {
+    cubeCount++;
+    cubes = (Cube*)realloc(cubes, cubeCount * sizeof(Cube));
+    cubes[cubeCount - 1] = (Cube){ position, size, color };
+}
+void AddSphere(Vector3 position, float radius, Color color) {
+    sphereCount++;
+    spheres = (Sphere*)realloc(spheres, sphereCount * sizeof(Sphere));
+    spheres[sphereCount - 1] = (Sphere){ position, radius, color };
+}
+void AddCylinder(Vector3 position, float radiusTop, float radiusBottom, float height, int slices, Color color) {
+    cylinderCount++;
+    cylinders = (Cylinder*)realloc(cylinders, cylinderCount * sizeof(Cylinder));
+    cylinders[cylinderCount - 1] = (Cylinder){ position, radiusTop, radiusBottom, height, slices, color };
+}
+void AddCapsule(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color color) {
+    capsuleCount++;
+    capsules = (Capsule*)realloc(capsules, capsuleCount * sizeof(Capsule)); // Reallocate memory for the new capsule
+    capsules[capsuleCount - 1] = (Capsule){ startPos, endPos, radius, slices, rings, color };
+}
+void AddPlane(Vector3 position, Vector2 size, Color color) {
+    planeCount++;
+    planes = (Plane*)realloc(planes, planeCount * sizeof(Plane));
+    planes[planeCount - 1] = (Plane){ position, size, color };
+}
 
 void DrawUnlimitedGrid(int gridSize, float gridStep) {
     // Draw the major grid lines (larger divisions)
@@ -83,12 +154,59 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
         DrawText("MouseWheel To Zoom In/Out", panelX + 10, 330, 20, WHITE);
         DrawText("Zero to Exit CAMERA Mode", panelX + 10, 360, 20, WHITE);
     }else if(isShapeCreationMode){
+        DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
+        if (GuiButton((Rectangle){ 1345, 50, 350, 50 }, "Cube")) { //x coordinate, y coordinate, length. wide
+            DrawText("Cube Created", 100, 200, 20, RED);
+            AddCube((Vector3){  0.0f, 1.0f, 0.0f }, {2.0f, 2.0f, 2.0f}, BLUE);
+            //Debugging AddCube
+            // AddCube((Vector3){ GetRandomValue(-5, 5), 1.0f, GetRandomValue(-5, 5) }, (Vector3){ 2.0f, 2.0f, 2.0f }, BLUE);
 
-    }else if(isAudioMode){
+        }
+        if (GuiButton((Rectangle){ 1345, 150, 350, 50 }, "Sphere")) { //x coordinate, y coordinate, length. wide
+            DrawText("Sphere Created", 100, 200, 20, RED);
 
-    }else if(isCollisionMode){
+            AddSphere((Vector3){ 0.0f, 1.0f, 0.0f }, 1.5f, RED);
+            //Debugging Add
+            //AddSphere((Vector3){ GetRandomValue(-5, 5), 1.0f, GetRandomValue(-5, 5) }, 1.5f, RED);
+        }
+        if(GuiButton((Rectangle){ 1345, 250, 350, 50 }, "Cylinder")) { //x coordinate, y coordinate, length. wide
+            
+            DrawText("Cylinder Created", 100, 200, 20, RED);
+            AddCylinder((Vector3){ 0.0f, 1.0f, 0.0f }, 1.0f, 1.0f, 3.0f, 16, GREEN);
+            //Debugging Add
+            //AddCylinder((Vector3){ GetRandomValue(-5, 5), 1.0f, GetRandomValue(-5, 5) }, 1.0f, 1.0f, 3.0f, 16, GREEN);
+        }
+        if (GuiButton((Rectangle){ 1345, 350, 350, 50 }, "Capsule")) { //x coordinate, y coordinate, length. wide
+            
+            DrawText("Capsule Created", 100, 200, 20, RED);
+            AddCapsule((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector3){ 0.0f, -1.0f, 0.0f }, 0.5f, 16, 8, GREEN);
+            
+
+            //Debugging Add
+            // AddCapsule((Vector3){ GetRandomValue(-5, 5), 1.0f, GetRandomValue(-5, 5) }, (Vector3){ GetRandomValue(-5, 5), 1.0f, GetRandomValue(-5, 5) }, 0.5f, 16, 8, GREEN);
+        }
+        if (GuiButton((Rectangle){ 1345, 450, 350, 50 }, "Plane")) { //x coordinate, y coordinate, length. wide
+            
+            DrawText("Plane Created", 100, 200, 20, RED);
+            AddPlane((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector2){ 3.0f, 3.0f }, DARKGRAY);
+            //Debugging Add
+            //AddPlane((Vector3){ GetRandomValue(-5, 5), 0.0f, GetRandomValue(-5, 5) }, (Vector2){ 3.0f, 3.0f }, DARKGRAY);
+
+
+        }
+        DrawText("Zero to Exit SHAPE CREATION Mode", panelX + 10, 550, 20, WHITE);
+    }
+    else if(isAudioMode){
+        DrawText("Audio Mode", panelX + 10, 10, 20, WHITE);
+        DrawText("Zero to Exit Audio Mode", panelX + 10, 360, 20, WHITE);
+    }
+    else if(isCollisionMode){
+        DrawText("Collision Mode", panelX + 10, 10, 20, WHITE);
+        DrawText("Zero to Exit Collision Mode", panelX + 10, 360, 20, WHITE);
 
     }else if(isAssetManagementMode){
+        DrawText("Asset Management Mode", panelX + 10, 10, 20, WHITE);
+        DrawText("Zero to Exit Asset Management Mode", panelX + 10, 360, 20, WHITE);
         
     }
 }
@@ -131,6 +249,7 @@ int main()
              isCameraMode = false;
              isNotInAnyMode = true;
          }
+
         //Shape Creation Mode Trigger
         if(IsKeyPressed(KEY_A)){
             isShapeCreationMode = true;
@@ -220,11 +339,27 @@ int main()
         // Begin 3D mode for the game scene
         BeginMode3D(camera);
 
+        // Draw shapes based on the state set by button clicks
+        for (int i = 0; i < cubeCount; i++) {
+            DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
+        }
+        for (int i = 0; i < sphereCount; i++) {
+            DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
+        }
+        for (int i = 0; i < cylinderCount; i++) {
+            DrawCylinder(cylinders[i].position, cylinders[i].radiusTop, cylinders[i].radiusBottom, cylinders[i].height, cylinders[i].slices, cylinders[i].color);
+        }
+        for (int i = 0; i < capsuleCount; i++) {
+            DrawCapsule(capsules[i].startPos, capsules[i].endPos, capsules[i].radius, capsules[i].slices, capsules[i].rings, capsules[i].color);
+        }
+        for (int i = 0; i < planeCount; i++) {
+            DrawPlane(planes[i].position, planes[i].size, planes[i].color);
+        }
         // Draw grid in 3D space
         DrawUnlimitedGrid(GRID_SIZE, GRID_STEP);  // Drawing the "unlimited" grid
 
         // Optionally, you can add 3D objects like cubes or spheres to your scene:
-        DrawCube((Vector3){ 0.0f, 1.0f, 0.0f }, 2.0f, 2.0f, 2.0f, BLUE);
+        //DrawCube((Vector3){ 0.0f, 1.0f, 0.0f }, 2.0f, 2.0f, 2.0f, BLUE);
 
         EndMode3D();
 
@@ -263,6 +398,12 @@ int main()
         EndDrawing();
     
 }
+    // Clean up the allocated memory
+    free(cubes);
+    free(spheres);
+    free(cylinders);
+    free(capsules);
+    free(planes);
     // De-initialization
     CloseWindow();  // Close window and OpenGL context
 
