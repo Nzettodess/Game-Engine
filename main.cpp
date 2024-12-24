@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS  // Disable deprecation warnings for sprintf, fopen, etc.
 #define GRID_SIZE 1000  // The range of the grid lines, you can adjust this value
 #define GRID_STEP 1.0f  // Step size between lines
-#define MAX_AUDIO_FILES 5 //
+#define MAX_AUDIO_FILES 2 //
 #define RAYGUI_IMPLEMENTATION
 
 #include "raylib.h"
@@ -10,6 +10,7 @@
 #include <stdlib.h> 
 #include <string.h>
 #include <iostream>
+
 
 using namespace std;
 
@@ -21,13 +22,52 @@ typedef struct {
     Sound sound;
     char name[256];
     bool loaded;
+    float volume;
+    float pitch;
+    float pan;
+    bool isPlaying;
+    bool wasPlaying;  // New field to track previous playing state
 } SoundFile;
 
 typedef struct {
     Music music;
     char name[256];
     bool loaded;
+    float volume;
+    float pitch;
+    float pan;
+    bool isPlaying;
+    bool wasPlaying;  // New field to track previous playing state
 } MusicFile;
+
+static SoundFile soundFiles[MAX_AUDIO_FILES] = { 0 };
+static MusicFile musicFiles[MAX_AUDIO_FILES] = { 0 };
+static float masterVolume = 1.0f;
+static float masterSoundVolume = 1.0f;
+static float masterMusicVolume = 1.0f;
+
+void UpdateSoundParameters(SoundFile* soundFile) {
+    if (soundFile->loaded) {
+        float effectiveVolume = soundFile->volume * masterSoundVolume * masterVolume;
+        SetSoundVolume(soundFile->sound, effectiveVolume);
+        SetSoundPitch(soundFile->sound, soundFile->pitch);
+        SetSoundPan(soundFile->sound, soundFile->pan);
+    }
+}
+
+// Add this function to update music parameters
+void UpdateMusicParameters(MusicFile* musicFile) {
+    if (musicFile->loaded) {
+        float effectiveVolume = musicFile->volume * masterMusicVolume * masterVolume;
+        SetMusicVolume(musicFile->music, effectiveVolume);
+        // Note: SetMusicPitch and SetMusicPan are not available in raylib
+    }
+}
+
+bool removedSound = false;  // Flag to track if a sound was removed
+int soundToRemove = -1;     // Index of sound to remove
+bool removedMusic = false;  // Flag to track if a sound was removed
+int musicToRemove = -1;     // Index of sound to remove
 
 //Shape Struct
 typedef struct {
@@ -118,10 +158,14 @@ void DrawUnlimitedGrid(int gridSize, float gridStep) {
         }
     }
 }
-void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMode,bool isAudioMode, bool& isfileunsupported, bool isCollisionMode,
-    bool isAssetManagementMode, float* rotationSpeed, float* panSpeed, float* fov, int* projection) 
-    {
+void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMode, 
+                 bool isAudioMode, bool& isfileunsupported, bool isCollisionMode,
+                 bool isAssetManagementMode, float* rotationSpeed, float* panSpeed, 
+                 float* fov, int* projection, 
+                 SoundFile* soundFiles, MusicFile* musicFiles,  // Add these parameters
+                 float& masterVolume, float& masterSoundVolume, float& masterMusicVolume)  // Add these parameters
 
+    {
     //draw pane
     int panelWidth = 400;  // Width of the right panel
     int panelX = screenWidth - panelWidth;
@@ -217,9 +261,183 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
     }
     else if(isAudioMode){
         DrawText("Audio Mode", panelX + 10, 10, 20, WHITE);
-        DrawText("Sound Effects", panelX + 10, 30, 20, WHITE);
-        DrawText("Music", panelX + 10, 110, 20, WHITE);
-        DrawText("Zero to Exit Audio Mode", panelX + 10, 360, 20, WHITE);
+        
+        // Master Volume Controls
+        DrawText("Master Volume", panelX + 10, 40, 20, WHITE);
+        GuiSliderBar((Rectangle){ panelX + 10, 65, 380, 20 }, NULL, NULL, &masterVolume, 0.0f, 1.0f);
+        
+        
+        // Sound Master Volume
+        DrawText("Sound Master Volume", panelX + 10, 90, 20, WHITE);
+        GuiSliderBar((Rectangle){ panelX + 10, 115, 380, 20 }, NULL, NULL, &masterSoundVolume, 0.0f, 1.0f);
+        
+
+        // Music Master Volume
+        DrawText("Music Master Volume", panelX + 10, 140, 20, WHITE);
+        GuiSliderBar((Rectangle){ panelX + 10, 165, 380, 20 }, NULL, NULL, &masterMusicVolume, 0.0f, 1.0f);
+        
+        // Sound Effects Section
+        DrawText("Sound Effects", panelX + 10, 190, 20, WHITE);
+
+        
+        // Display loaded sounds and their controls
+        int yPos = 220;
+        for (int i = 0; i < MAX_AUDIO_FILES; i++) {
+            if (soundFiles[i].loaded) {
+                // Display sound name
+                DrawText(GetFileName(soundFiles[i].name), panelX + 10, yPos, 20, WHITE);
+                
+                // Play/Stop button
+                    if (GuiButton((Rectangle){ panelX + 10, yPos + 20, 50, 20 }, "Play")) {
+                        PlaySound(soundFiles[i].sound);
+                        soundFiles[i].isPlaying = true;
+                        cout << "Start";
+
+                        // Immediately apply current volume settings
+                        SetSoundVolume(soundFiles[i].sound, soundFiles[i].volume * masterSoundVolume * masterVolume);
+                        SetSoundPitch(soundFiles[i].sound, soundFiles[i].pitch);
+                        SetSoundPan(soundFiles[i].sound, soundFiles[i].pan);
+                    }
+
+                    if (GuiButton((Rectangle){ panelX + 70, yPos + 20, 50, 20 }, "Stop")) {
+                        StopSound(soundFiles[i].sound);
+                        soundFiles[i].isPlaying = false;
+                        cout << "stopped";
+                    }
+
+                    // Pause/Resume button
+                    if (GuiButton((Rectangle){ panelX + 150, yPos + 20, 50, 20 }, "Pause")) {
+                        PauseSound(soundFiles[i].sound);              
+                    }
+                    if (GuiButton((Rectangle){ panelX + 210, yPos + 20, 50, 20 }, "Resume")) {
+                        ResumeSound(soundFiles[i].sound);
+                    }
+                    
+                    if (GuiButton((Rectangle){ panelX + 290, yPos + 20, 50, 20 }, "Remove")) {
+                        // Only remove the sound at the current index
+                    // if (soundFiles[i].loaded) {
+                    //     UnloadSound(soundFiles[i].sound);
+                        
+                    //     // Reset all properties for this specific index only
+                    //     soundFiles[i].loaded = false;
+                    //     // soundFiles[i].sound = LoadSound("");  // This might generate the warning but is necessary
+                    //     soundFiles[i] = (SoundFile){ 0 };
+                    //     soundFiles[i].volume = 1.0f;
+                    //     soundFiles[i].pitch = 1.0f;
+                    //     soundFiles[i].pan = 0.0f;
+                    //     soundFiles[i].isPlaying = false;
+                    //     soundFiles[i].wasPlaying = false;
+                    //     //memset(soundFiles[i].name, 0, sizeof(soundFiles[i].name));
+                        
+                    //     cout << "Removed sound at index " << i << std::endl;
+                                soundToRemove = i;  // Mark this index for removal
+                                removedSound = true;
+                    
+    
+    }
+                                                  
+                    
+
+                
+                // Volume slider
+                DrawText("Volume", panelX + 10, yPos + 45, 20, WHITE);
+                GuiSliderBar((Rectangle){ panelX + 80, yPos + 45, 300, 20 }, NULL, NULL, &soundFiles[i].volume, 0.0f, 1.0f);
+                SetSoundVolume(soundFiles[i].sound, soundFiles[i].volume * masterSoundVolume * masterVolume);
+                
+                // Pitch slider
+                DrawText("Pitch", panelX + 10, yPos + 70, 20, WHITE);
+                GuiSliderBar((Rectangle){ panelX + 80, yPos + 70, 300, 20 }, NULL, NULL, &soundFiles[i].pitch, 0.5f, 2.0f);
+                SetSoundPitch(soundFiles[i].sound, soundFiles[i].pitch);
+                
+                // Pan slider
+                DrawText("Pan", panelX + 10, yPos + 95, 20, WHITE);
+                GuiSliderBar((Rectangle){ panelX + 80, yPos + 95, 300, 20 }, NULL, NULL, &soundFiles[i].pan, -1.0f, 1.0f);
+                SetSoundPan(soundFiles[i].sound, soundFiles[i].pan);
+                
+                yPos += 130;
+            }
+        }
+        
+        // Music Section
+        DrawText("Music", panelX + 10, yPos, 20, WHITE);
+        
+        yPos += 40;
+        for (int i = 0; i < MAX_AUDIO_FILES; i++) {
+            if (musicFiles[i].loaded) {
+                // Display music name
+                DrawText(GetFileName(musicFiles[i].name), panelX + 10, yPos, 20, WHITE);
+                
+                // Display music length
+                float musicLength = GetMusicTimeLength(musicFiles[i].music);
+                char timeText[32];
+                sprintf(timeText, "Length: %.2f sec", musicLength);
+                DrawText(timeText, panelX + 10, yPos + 20, 16, WHITE);
+            
+
+                if (GuiButton((Rectangle){ panelX + 10, yPos + 40, 50, 20 }, "Play")) {
+                        PlayMusicStream(musicFiles[i].music);
+                        musicFiles[i].isPlaying = true;
+                        
+                        // Immediately apply current volume settings
+                        SetMusicVolume(musicFiles[i].music, musicFiles[i].volume * masterMusicVolume * masterVolume);
+                        SetMusicPitch(musicFiles[i].music, musicFiles[i].pitch * masterMusicVolume * masterVolume);
+                        SetMusicPan(musicFiles[i].music, musicFiles[i].pan * masterMusicVolume * masterVolume);
+                }
+                if (GuiButton((Rectangle){ panelX + 70, yPos + 40, 50, 20 }, "Stop")) {
+                    StopMusicStream(musicFiles[i].music);
+                    musicFiles[i].isPlaying = false;
+                    
+                }
+
+                // Pause/Resume button
+                if (GuiButton((Rectangle){ panelX + 150, yPos + 40, 50, 20 }, "Pause")) {
+                    PauseMusicStream(musicFiles[i].music);       
+                    musicFiles[i].isPlaying = false;        
+                }
+                if (GuiButton((Rectangle){ panelX + 210, yPos + 40, 50, 20 }, "Resume")) {
+                    ResumeMusicStream(musicFiles[i].music);
+                    musicFiles[i].isPlaying = true;
+                }
+                if (GuiButton((Rectangle){ panelX + 290, yPos + 40, 50, 20 }, "Remove")) {
+                        // UnloadMusicStream(musicFiles[i].music);
+                        // musicFiles[i].music = LoadMusicStream("");  // Load empty music stream
+                        // musicFiles[i].volume = 1.0f;
+                        // musicFiles[i].pitch = 1.0f;
+                        // musicFiles[i].pan = 0.0f;
+                        // musicFiles[i].isPlaying = false;
+                        // musicFiles[i].wasPlaying = false;
+                        // musicFiles[i].loaded = false;
+                        musicToRemove = i;  // Mark this index for removal
+                        removedMusic = true;
+                        
+                    }
+                
+                
+                // Volume slider
+                DrawText("Volume", panelX + 10, yPos + 65, 20, WHITE);
+                GuiSliderBar((Rectangle){ panelX + 80, yPos + 65, 300, 20 }, NULL, NULL, &musicFiles[i].volume, 0.0f, 1.0f);
+                SetMusicVolume(musicFiles[i].music, musicFiles[i].volume * masterMusicVolume * masterVolume);
+                
+                // Pitch slider
+                DrawText("Pitch", panelX + 10, yPos + 90, 20, WHITE);
+                GuiSliderBar((Rectangle){ panelX + 80, yPos + 90, 300, 20 }, NULL, NULL, &musicFiles[i].pitch, 0.5f, 2.0f);
+                SetMusicPitch(musicFiles[i].music, musicFiles[i].pitch * masterMusicVolume * masterVolume);
+
+                // Pan slider
+                DrawText("Pan", panelX + 10, yPos + 115, 20, WHITE);
+                GuiSliderBar((Rectangle){ panelX + 80, yPos + 115, 300, 20 }, NULL, NULL, &musicFiles[i].pan, -1.0f, 1.0f);
+                SetMusicPan(musicFiles[i].music, musicFiles[i].pan * masterMusicVolume * masterVolume);
+
+                // Update music stream
+                if (musicFiles[i].isPlaying) {
+                    UpdateMusicStream(musicFiles[i].music);
+                }
+                
+                yPos += 150;
+            }
+        }
+        
+        DrawText("Zero to Exit Audio Mode", panelX + 10, screenHeight - 30, 20, WHITE);
 
         if(isfileunsupported){
 
@@ -236,7 +454,7 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
                     isfileunsupported = false;  // Close the message box
                 }
         }
-
+        
         
         
     }
@@ -250,10 +468,38 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
         
     }
 }
+void InitializeAudioFiles() {
+    for (int i = 0; i < MAX_AUDIO_FILES; i++) {
+        // Sound Initialization
+        soundFiles[i].volume = 1.0f;
+        soundFiles[i].pitch = 1.0f;
+        soundFiles[i].pan = 0.0f;
+        soundFiles[i].isPlaying = false;
+        soundFiles[i].wasPlaying = false;
+        soundFiles[i].loaded = false;
+        soundFiles[i].sound = LoadSound("");  // Load empty sound
+
+        // Music Initialization
+        musicFiles[i].volume = 1.0f;
+        musicFiles[i].pitch = 1.0f;
+        musicFiles[i].pan = 0.0f;
+        musicFiles[i].isPlaying = false;
+        musicFiles[i].wasPlaying = false;
+        musicFiles[i].loaded = false;
+        musicFiles[i].music = LoadMusicStream("");  // Load empty music stream
+    }
+}
+__attribute__((constructor)) void PreMainInitialization() {
+    InitializeAudioFiles();
+}
+
 
 int main()
-{
+{   
     InitWindow(screenWidth, screenHeight, "Game Engine by Stellar Blade");
+    InitAudioDevice();
+
+    SetMasterVolume(masterVolume);
 
     //Mode Switching
     bool isNotInAnyMode = true;
@@ -261,9 +507,11 @@ int main()
     bool isShapeCreationMode = false;
     bool isAudioMode = false;
         bool isfileunsupported = false;
+        
     bool isCollisionMode = false;
     bool isAssetManagementMode = false;
-    
+        
+
     // Camera Param
     Camera camera = {0};
     camera.position = (Vector3){ 8.0f, 6.0f, 8.0f };    // Camera position
@@ -275,22 +523,14 @@ int main()
     float panSpeed = 0.01f;       // Adjust for panning speed
     float fov = 60.0f;            // Field of view
     int projection = CAMERA_PERSPECTIVE; // Projection type
+    
 
-    static SoundFile soundFiles[MAX_AUDIO_FILES] = { 0 };
-    static MusicFile musicFile = { 0 };
-    static int selectedSound = -1;
-    static bool musicPlaying = false;
-
-    static float soundVolume = 1.0f;
-    static float soundPitch = 1.0f;
-    static float soundPan = 0.0f;
-
-    static float musicVolume = 1.0f;
 
     SetTargetFPS(60);  // Set the game to run at 60 frames per second
 
     while (!WindowShouldClose())  // Detect window close button or ESC key
-    {
+    {   
+                
         //CameraMode Trigger
         if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
             isCameraMode = true;
@@ -316,6 +556,7 @@ int main()
              isAudioMode = false;
              isNotInAnyMode = true;
          }
+        
         //Camera Mode Logic
         if(isCameraMode){
 
@@ -389,46 +630,97 @@ int main()
         if(isAudioMode){
 
             if (IsFileDropped()) {
-                // Load dropped files using FilePathList
+
                 FilePathList droppedFiles = LoadDroppedFiles();
 
-                    for (unsigned int i = 0; i < droppedFiles.count; i++) {
-                        const char *filePath = droppedFiles.paths[i];
-                        
-                        if (IsFileExtension(filePath, ".wav")||IsFileExtension(filePath, ".ogg")||IsFileExtension(filePath, ".flac")||IsFileExtension(filePath, ".mp3")) 
-                        {
-                            cout << "Loaded Sound";
-                            if (IsFileExtension(filePath, ".wav") || IsFileExtension(filePath, ".ogg") || IsFileExtension(filePath, ".flac")) {
+                for (unsigned int i = 0; i < droppedFiles.count; i++) {
+                    const char *filePath = droppedFiles.paths[i];
+                    
+                    if (IsFileExtension(filePath, ".wav") || IsFileExtension(filePath, ".ogg") || IsFileExtension(filePath, ".flac") || IsFileExtension(filePath, ".mp3")) 
+                    {
+                        if (IsFileExtension(filePath, ".wav") || IsFileExtension(filePath, ".ogg") || IsFileExtension(filePath, ".flac")) {
                             // Load as sound effect
-                                for (int j = 0; j < MAX_AUDIO_FILES; j++) {
-                                    if (!soundFiles[j].loaded) {
-                                        soundFiles[j].sound = LoadSound(filePath);
-                                        strncpy(soundFiles[j].name, filePath, 255);
-                                        soundFiles[j].loaded = true;
-                                        cout << "Loaded Sound";
-                                        break;
-                                    }
-                                }
-                            } else if (IsFileExtension(filePath, ".mp3")) {
-                                // Load as music
-                                if (!musicFile.loaded) {
-                                    musicFile.music = LoadMusicStream(filePath);
-                                    strncpy(musicFile.name, filePath, 255);
-                                    musicFile.loaded = true;
-                                    cout << "Loaded Music";
+                            for (int j = 0; j < MAX_AUDIO_FILES; j++) {
+                                if (!soundFiles[j].loaded) {
+                                    soundFiles[j].sound = LoadSound(filePath);
+                                    strncpy(soundFiles[j].name, filePath, 255);
+                                    soundFiles[j].loaded = true;
+                                    soundFiles[j].volume = 1.0f;
+                                    soundFiles[j].pitch = 1.0f;
+                                    soundFiles[j].pan = 0.0f;
+                                    soundFiles[j].isPlaying = false;
+                                    break;
                                 }
                             }
-                        } else {
-                            // Unsupported file format
-                            char errorMsg[512];
-                            snprintf(errorMsg, sizeof(errorMsg), "Unsupported file format: %s", GetFileName(filePath));
-                            cout << "Unsupported file format";
-                            isfileunsupported = true;
+                        } else if (IsFileExtension(filePath, ".mp3")) {
+                            // Load as music
+                            for (int j = 0; j < MAX_AUDIO_FILES; j++) {
+                                if (!musicFiles[j].loaded) {
+                                    musicFiles[j].music = LoadMusicStream(filePath);
+                                    strncpy(musicFiles[j].name, filePath, 255);
+                                    musicFiles[j].loaded = true;
+                                    musicFiles[j].volume = 1.0f;
+                                    musicFiles[j].pitch = 1.0f;
+                                    musicFiles[j].pan = 0.0f;
+                                    musicFiles[j].isPlaying = false;
+                                    
+                                    break;
+                                }
+                            }
                         }
                     }
+                    else {
+                        // Unsupported file format
+                        isfileunsupported = true;
+                    }
+                }
 
-                    // Free memory used by dropped files
                 UnloadDroppedFiles(droppedFiles);
+            }
+            // Update master volume
+            SetMasterVolume(masterVolume);
+            
+            // Update all sound parameters
+            for (int i = 0; i < MAX_AUDIO_FILES; i++) {
+                if (soundFiles[i].loaded) {
+                    UpdateSoundParameters(&soundFiles[i]);
+                    
+                    // Check if sound just started playing
+                    if (soundFiles[i].isPlaying && !soundFiles[i].wasPlaying) {
+                        PlaySound(soundFiles[i].sound);
+                    }
+                    // Update previous state
+                    soundFiles[i].wasPlaying = soundFiles[i].isPlaying;
+                    
+                    // Check if sound finished playing
+                    if (!IsSoundPlaying(soundFiles[i].sound) && soundFiles[i].isPlaying) {
+                        soundFiles[i].isPlaying = false;
+                    }
+                }
+            }
+            
+            // Update all music parameters
+            for (int i = 0; i < MAX_AUDIO_FILES; i++) {
+                if (musicFiles[i].loaded) {
+                    UpdateMusicParameters(&musicFiles[i]);
+                    
+                    // Check if music just started playing
+                    if (musicFiles[i].isPlaying && !musicFiles[i].wasPlaying) {
+                        PlayMusicStream(musicFiles[i].music);
+                    }
+                    // Update previous state
+                    musicFiles[i].wasPlaying = musicFiles[i].isPlaying;
+                    
+                    // Update music stream if playing
+                    if (musicFiles[i].isPlaying) {
+                        UpdateMusicStream(musicFiles[i].music);
+                        
+                        // Check if music finished playing
+                        if (!IsMusicStreamPlaying(musicFiles[i].music)) {
+                            musicFiles[i].isPlaying = false;
+                        }
+                    }
+                }
             }
 
         }
@@ -448,7 +740,7 @@ int main()
         // Drawing logic
         BeginDrawing();
         ClearBackground(RAYWHITE);  // Clear the screen with a white background
-
+        
         // Begin 3D mode for the game scene
         BeginMode3D(camera);
 
@@ -476,49 +768,97 @@ int main()
         //DrawCube((Vector3){ 0.0f, 1.0f, 0.0f }, 2.0f, 2.0f, 2.0f, BLUE);
 
         EndMode3D();
-
+        
         //Draw GUI
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
-     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
+                    isAudioMode, isfileunsupported, isCollisionMode,
+                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
+                    &fov, &projection, 
+                    soundFiles, musicFiles,
+                    masterVolume, masterSoundVolume, masterMusicVolume);
         //Draw Mode GUI
         if(isCameraMode){
             isNotInAnyMode = false;
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
-     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
+                    isAudioMode, isfileunsupported, isCollisionMode,
+                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
+                    &fov, &projection, 
+                    soundFiles, musicFiles,  // Pass the audio arrays
+                    masterVolume, masterSoundVolume, masterMusicVolume);
         }
         if(isShapeCreationMode){
             isNotInAnyMode = false;
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
-     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
+                    isAudioMode, isfileunsupported, isCollisionMode,
+                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
+                    &fov, &projection, 
+                    soundFiles, musicFiles,  // Pass the audio arrays
+                    masterVolume, masterSoundVolume, masterMusicVolume);
         }
         if(isAudioMode){
             isNotInAnyMode = false;
 
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
-     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
+                    isAudioMode, isfileunsupported, isCollisionMode,
+                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
+                    &fov, &projection, 
+                    soundFiles, musicFiles,  // Pass the audio arrays
+                    masterVolume, masterSoundVolume, masterMusicVolume);
         }
         if(isCollisionMode){
             isNotInAnyMode = false;
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
-     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
+                    isAudioMode, isfileunsupported, isCollisionMode,
+                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
+                    &fov, &projection, 
+                    soundFiles, musicFiles,  // Pass the audio arrays
+                    masterVolume, masterSoundVolume, masterMusicVolume);
         }
         if(isAssetManagementMode){
             isNotInAnyMode = false;
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
-     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
+                    isAudioMode, isfileunsupported, isCollisionMode,
+                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
+                    &fov, &projection, 
+                    soundFiles, musicFiles,  // Pass the audio arrays
+                    masterVolume, masterSoundVolume, masterMusicVolume);
         }
         // Draw the blank canvas (just a white background for now)
         // DrawText("Hold RMB to Enter CAMERA Mode", 250, 20, 20, DARKGRAY);
-
+            if (removedSound && soundToRemove >= 0) {
+                UnloadSound(soundFiles[soundToRemove].sound);
+                soundFiles[soundToRemove].sound = LoadSound("");
+                soundFiles[soundToRemove].loaded = false;
+                soundFiles[soundToRemove].isPlaying = false;
+                soundFiles[soundToRemove].wasPlaying = false;
+                soundFiles[soundToRemove].volume = 1.0f;
+                soundFiles[soundToRemove].pitch = 1.0f;
+                soundFiles[soundToRemove].pan = 0.0f;
+                soundToRemove = -1;
+            }
+            if (removedMusic && musicToRemove >= 0) {
+                UnloadMusicStream(musicFiles[musicToRemove].music);
+                musicFiles[musicToRemove].music = LoadMusicStream("");  // Load empty music stream
+                musicFiles[musicToRemove].volume = 1.0f;
+                musicFiles[musicToRemove].pitch = 1.0f;
+                musicFiles[musicToRemove].pan = 0.0f;
+                musicFiles[musicToRemove].isPlaying = false;
+                musicFiles[musicToRemove].wasPlaying = false;
+                musicFiles[musicToRemove].loaded = false;
+                musicToRemove = -1;
+            }
         EndDrawing();
     
 }
+
     // Clean up the allocated memory
     free(cubes);
     free(spheres);
     free(cylinders);
     free(capsules);
     free(planes);
+    
+    CloseAudioDevice();
     // De-initialization
     CloseWindow();  // Close window and OpenGL context
 
