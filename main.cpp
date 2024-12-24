@@ -155,6 +155,7 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
         DrawText("Zero to Exit CAMERA Mode", panelX + 10, 360, 20, WHITE);
     }else if(isShapeCreationMode){
         DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
+        GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
         if (GuiButton((Rectangle){ 1345, 50, 350, 50 }, "Cube")) { //x coordinate, y coordinate, length. wide
             DrawText("Cube Created", 100, 200, 20, RED);
             AddCube((Vector3){  0.0f, 1.0f, 0.0f }, {2.0f, 2.0f, 2.0f}, BLUE);
@@ -223,7 +224,6 @@ int main()
     bool isCollisionMode = false;
     bool isAssetManagementMode = false;
     
-
     // Camera Param
     Camera camera = {0};
     camera.position = (Vector3){ 8.0f, 6.0f, 8.0f };    // Camera position
