@@ -1,15 +1,33 @@
 #define _CRT_SECURE_NO_WARNINGS  // Disable deprecation warnings for sprintf, fopen, etc.
 #define GRID_SIZE 1000  // The range of the grid lines, you can adjust this value
 #define GRID_STEP 1.0f  // Step size between lines
+#define MAX_AUDIO_FILES 5 //
 #define RAYGUI_IMPLEMENTATION
 
 #include "raylib.h"
 #include "raygui.h"
 #include "raymath.h"
 #include <stdlib.h> 
+#include <string.h>
+#include <iostream>
+
+using namespace std;
 
 const int screenWidth = 1720;
 const int screenHeight = 880;
+
+// Audio handling structures
+typedef struct {
+    Sound sound;
+    char name[256];
+    bool loaded;
+} SoundFile;
+
+typedef struct {
+    Music music;
+    char name[256];
+    bool loaded;
+} MusicFile;
 
 //Shape Struct
 typedef struct {
@@ -100,7 +118,7 @@ void DrawUnlimitedGrid(int gridSize, float gridStep) {
         }
     }
 }
-void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMode,bool isAudioMode, bool isCollisionMode,
+void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMode,bool isAudioMode, bool& isfileunsupported, bool isCollisionMode,
     bool isAssetManagementMode, float* rotationSpeed, float* panSpeed, float* fov, int* projection) 
     {
 
@@ -117,7 +135,7 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
         DrawText("Press A to Enter  ", panelX + 10, 100, 20, WHITE);
         DrawText("SHAPE CREATION Mode", panelX + 10, 120, 20, WHITE);
 
-        DrawText("Press XX to Enter ", panelX + 10, 170, 20, WHITE);
+        DrawText("Press M to Enter ", panelX + 10, 170, 20, WHITE);
         DrawText("AUDIO Mode", panelX + 10, 190, 20, WHITE);
 
         DrawText("Press XX to Enter ", panelX + 10, 240, 20, WHITE);
@@ -199,7 +217,28 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
     }
     else if(isAudioMode){
         DrawText("Audio Mode", panelX + 10, 10, 20, WHITE);
+        DrawText("Sound Effects", panelX + 10, 30, 20, WHITE);
+        DrawText("Music", panelX + 10, 110, 20, WHITE);
         DrawText("Zero to Exit Audio Mode", panelX + 10, 360, 20, WHITE);
+
+        if(isfileunsupported){
+
+            int rectWidth = 500;
+            int rectHeight = 150;
+            int rectX = (screenWidth - rectWidth) / 2;
+            int rectY = (screenHeight - rectHeight) / 2;
+            
+            DrawRectangle(rectX, rectY, rectWidth, rectHeight, DARKGRAY);
+            DrawText("Unsupported File Format", rectX+120, rectY+10, 20, WHITE);
+            DrawText("The file format is not supported.", rectX+70, rectY+40, 20, WHITE);
+            DrawText("Accepted Format: .wav, .ogg, .flac, .mp3", rectX+50, rectY+60, 20, WHITE);
+                if (GuiButton((Rectangle){ rectX+150, rectY+100, 180, 30 }, "OK")) {
+                    isfileunsupported = false;  // Close the message box
+                }
+        }
+
+        
+        
     }
     else if(isCollisionMode){
         DrawText("Collision Mode", panelX + 10, 10, 20, WHITE);
@@ -221,6 +260,7 @@ int main()
     bool isCameraMode = false;
     bool isShapeCreationMode = false;
     bool isAudioMode = false;
+        bool isfileunsupported = false;
     bool isCollisionMode = false;
     bool isAssetManagementMode = false;
     
@@ -236,6 +276,16 @@ int main()
     float fov = 60.0f;            // Field of view
     int projection = CAMERA_PERSPECTIVE; // Projection type
 
+    static SoundFile soundFiles[MAX_AUDIO_FILES] = { 0 };
+    static MusicFile musicFile = { 0 };
+    static int selectedSound = -1;
+    static bool musicPlaying = false;
+
+    static float soundVolume = 1.0f;
+    static float soundPitch = 1.0f;
+    static float soundPan = 0.0f;
+
+    static float musicVolume = 1.0f;
 
     SetTargetFPS(60);  // Set the game to run at 60 frames per second
 
@@ -258,7 +308,14 @@ int main()
              isShapeCreationMode = false;
              isNotInAnyMode = true;
          }
-
+         //Audio Mode
+        if(IsKeyPressed(KEY_M)){
+            isAudioMode = true;
+        }
+        else if (IsKeyPressed(KEY_ZERO)){
+             isAudioMode = false;
+             isNotInAnyMode = true;
+         }
         //Camera Mode Logic
         if(isCameraMode){
 
@@ -324,7 +381,63 @@ int main()
             camera.target.y += 0.1f;
         }
         }
+        //Shape Creation Mode
         if(isShapeCreationMode){
+
+        }
+        //Audio Mode
+        if(isAudioMode){
+
+            if (IsFileDropped()) {
+                // Load dropped files using FilePathList
+                FilePathList droppedFiles = LoadDroppedFiles();
+
+                    for (unsigned int i = 0; i < droppedFiles.count; i++) {
+                        const char *filePath = droppedFiles.paths[i];
+                        
+                        if (IsFileExtension(filePath, ".wav")||IsFileExtension(filePath, ".ogg")||IsFileExtension(filePath, ".flac")||IsFileExtension(filePath, ".mp3")) 
+                        {
+                            cout << "Loaded Sound";
+                            if (IsFileExtension(filePath, ".wav") || IsFileExtension(filePath, ".ogg") || IsFileExtension(filePath, ".flac")) {
+                            // Load as sound effect
+                                for (int j = 0; j < MAX_AUDIO_FILES; j++) {
+                                    if (!soundFiles[j].loaded) {
+                                        soundFiles[j].sound = LoadSound(filePath);
+                                        strncpy(soundFiles[j].name, filePath, 255);
+                                        soundFiles[j].loaded = true;
+                                        cout << "Loaded Sound";
+                                        break;
+                                    }
+                                }
+                            } else if (IsFileExtension(filePath, ".mp3")) {
+                                // Load as music
+                                if (!musicFile.loaded) {
+                                    musicFile.music = LoadMusicStream(filePath);
+                                    strncpy(musicFile.name, filePath, 255);
+                                    musicFile.loaded = true;
+                                    cout << "Loaded Music";
+                                }
+                            }
+                        } else {
+                            // Unsupported file format
+                            char errorMsg[512];
+                            snprintf(errorMsg, sizeof(errorMsg), "Unsupported file format: %s", GetFileName(filePath));
+                            cout << "Unsupported file format";
+                            isfileunsupported = true;
+                        }
+                    }
+
+                    // Free memory used by dropped files
+                UnloadDroppedFiles(droppedFiles);
+            }
+
+        }
+        //Collision Mode
+        if(isCollisionMode){
+
+        }
+        //Assets Management Mode
+        if(isAssetManagementMode){
 
         }
         //GUI Updater
@@ -355,6 +468,7 @@ int main()
         for (int i = 0; i < planeCount; i++) {
             DrawPlane(planes[i].position, planes[i].size, planes[i].color);
         }
+        
         // Draw grid in 3D space
         DrawUnlimitedGrid(GRID_SIZE, GRID_STEP);  // Drawing the "unlimited" grid
 
@@ -364,32 +478,33 @@ int main()
         EndMode3D();
 
         //Draw GUI
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
      isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
         //Draw Mode GUI
         if(isCameraMode){
             isNotInAnyMode = false;
-            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
      isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
         }
         if(isShapeCreationMode){
             isNotInAnyMode = false;
-            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
      isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
         }
         if(isAudioMode){
             isNotInAnyMode = false;
-            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
      isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
         }
         if(isCollisionMode){
             isNotInAnyMode = false;
-            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
      isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
         }
         if(isAssetManagementMode){
             isNotInAnyMode = false;
-            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isfileunsupported, isCollisionMode,
      isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
         }
         // Draw the blank canvas (just a white background for now)
