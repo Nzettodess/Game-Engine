@@ -29,15 +29,34 @@ void DrawUnlimitedGrid(int gridSize, float gridStep) {
         }
     }
 }
-void DrawInfoPane(bool isCameraMode, float* rotationSpeed, float* panSpeed, float* fov, int* projection) {
+void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMode,bool isAudioMode, bool isCollisionMode,
+    bool isAssetManagementMode, float* rotationSpeed, float* panSpeed, float* fov, int* projection) 
+    {
+
+    //draw pane
     int panelWidth = 400;  // Width of the right panel
     int panelX = screenWidth - panelWidth;
     DrawRectangle(panelX, 0, panelWidth, screenHeight, BLACK);
-
-    if (!isCameraMode) {
+    //mode switch
+    if (isNotInAnyMode) {
         DrawText("Information Pane", panelX + 10, 10, 20, WHITE);
+
         DrawText("Press RMB to Enter CAMERA Mode", panelX + 10, 50, 20, WHITE);
-    } else {
+
+        DrawText("Press A to Enter  ", panelX + 10, 100, 20, WHITE);
+        DrawText("SHAPE CREATION Mode", panelX + 10, 120, 20, WHITE);
+
+        DrawText("Press XX to Enter ", panelX + 10, 170, 20, WHITE);
+        DrawText("AUDIO Mode", panelX + 10, 190, 20, WHITE);
+
+        DrawText("Press XX to Enter ", panelX + 10, 240, 20, WHITE);
+        DrawText("COLLISION Mode", panelX + 10, 260, 20, WHITE);
+
+        DrawText("Press XX to Enter ", panelX + 10, 310, 20, WHITE);
+        DrawText("ASSET MANAGEMENT Mode", panelX + 10, 330, 20, WHITE);
+
+        // DrawText("Press XX to Enter Shape CREATION Mode", panelX + 10, 80, 20, WHITE);
+    } else if (isCameraMode){
         DrawText("Camera Settings", panelX + 10, 10, 20, WHITE);
 
         // Adjust rotation speed
@@ -63,6 +82,14 @@ void DrawInfoPane(bool isCameraMode, float* rotationSpeed, float* panSpeed, floa
         DrawText("WASD To Move, QE To Up/Down,", panelX + 10, 300, 20, WHITE);
         DrawText("MouseWheel To Zoom In/Out", panelX + 10, 330, 20, WHITE);
         DrawText("Zero to Exit CAMERA Mode", panelX + 10, 360, 20, WHITE);
+    }else if(isShapeCreationMode){
+
+    }else if(isAudioMode){
+
+    }else if(isCollisionMode){
+
+    }else if(isAssetManagementMode){
+        
     }
 }
 
@@ -70,8 +97,16 @@ int main()
 {
     InitWindow(screenWidth, screenHeight, "Game Engine by Stellar Blade");
 
-    // Define the camera to look into our 3d world (position, target, up vector)
+    //Mode Switching
+    bool isNotInAnyMode = true;
     bool isCameraMode = false;
+    bool isShapeCreationMode = false;
+    bool isAudioMode = false;
+    bool isCollisionMode = false;
+    bool isAssetManagementMode = false;
+    
+
+    // Camera Param
     Camera camera = {0};
     camera.position = (Vector3){ 8.0f, 6.0f, 8.0f };    // Camera position
     camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
@@ -88,13 +123,24 @@ int main()
 
     while (!WindowShouldClose())  // Detect window close button or ESC key
     {
+        //CameraMode Trigger
         if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
             isCameraMode = true;
         }
         else if (IsKeyPressed(KEY_ZERO)){
              isCameraMode = false;
+             isNotInAnyMode = true;
+         }
+        //Shape Creation Mode Trigger
+        if(IsKeyPressed(KEY_A)){
+            isShapeCreationMode = true;
+        }
+        else if (IsKeyPressed(KEY_ZERO)){
+             isShapeCreationMode = false;
+             isNotInAnyMode = true;
          }
 
+        //Camera Mode Logic
         if(isCameraMode){
 
         Vector2 mouseDelta = GetMouseDelta();  // Get the mouse delta
@@ -159,9 +205,14 @@ int main()
             camera.target.y += 0.1f;
         }
         }
-                // Update FOV and projection mode based on GUI
+        if(isShapeCreationMode){
+
+        }
+        //GUI Updater
+        // Update FOV and projection mode based on GUI
         camera.fovy = fov;
         camera.projection = projection;
+
         // Drawing logic
         BeginDrawing();
         ClearBackground(RAYWHITE);  // Clear the screen with a white background
@@ -177,10 +228,34 @@ int main()
 
         EndMode3D();
 
-        DrawInfoPane(isCameraMode, &rotationSpeed, &panSpeed, &fov, &projection);
-
+        //Draw GUI
+        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        //Draw Mode GUI
         if(isCameraMode){
-            DrawInfoPane(isCameraMode, &rotationSpeed, &panSpeed, &fov, &projection);
+            isNotInAnyMode = false;
+            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        }
+        if(isShapeCreationMode){
+            isNotInAnyMode = false;
+            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        }
+        if(isAudioMode){
+            isNotInAnyMode = false;
+            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        }
+        if(isCollisionMode){
+            isNotInAnyMode = false;
+            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
+        }
+        if(isAssetManagementMode){
+            isNotInAnyMode = false;
+            DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, isAudioMode,  isCollisionMode,
+     isAssetManagementMode, &rotationSpeed, &panSpeed, &fov, &projection);
         }
         // Draw the blank canvas (just a white background for now)
         // DrawText("Hold RMB to Enter CAMERA Mode", 250, 20, 20, DARKGRAY);
