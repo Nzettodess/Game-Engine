@@ -559,6 +559,7 @@ int main()
         //CameraMode Trigger
         if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
             isCameraMode = true;
+            isNotInAnyMode = false;
         }
         else if (IsKeyPressed(KEY_ZERO)){
              isCameraMode = false;
@@ -568,6 +569,7 @@ int main()
         //Shape Creation Mode Trigger
         if(IsKeyPressed(KEY_A)){
             isShapeCreationMode = true;
+            isNotInAnyMode = false;
         }
         else if (IsKeyPressed(KEY_ZERO)){
              isShapeCreationMode = false;
@@ -576,9 +578,30 @@ int main()
          //Audio Mode
         if(IsKeyPressed(KEY_M)){
             isAudioMode = true;
+            isNotInAnyMode = false;
         }
         else if (IsKeyPressed(KEY_ZERO)){
              isAudioMode = false;
+             isNotInAnyMode = true;
+         }
+
+         //Collision Mode
+         if(IsKeyPressed(KEY_C)){
+            isCollisionMode = true;
+            isNotInAnyMode = false;
+        }
+        else if (IsKeyPressed(KEY_ZERO)){
+             isCollisionMode = false;
+             isNotInAnyMode = true;
+         }
+
+         //Asset Management Mode
+         if(IsKeyPressed(KEY_X)){
+            isAssetManagementMode = true;
+            isNotInAnyMode = false;
+        }
+        else if (IsKeyPressed(KEY_ZERO)){
+             isAssetManagementMode = false;
              isNotInAnyMode = true;
          }
         
@@ -801,53 +824,6 @@ int main()
                     &fov, &projection, 
                     soundFiles, musicFiles,
                     masterVolume, masterSoundVolume, masterMusicVolume);
-        //Draw Mode GUI
-        if(isCameraMode){
-            isNotInAnyMode = false;
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
-                    isAudioMode, isfileunsupported, isCollisionMode,
-                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
-                    &fov, &projection, 
-                    soundFiles, musicFiles,  // Pass the audio arrays
-                    masterVolume, masterSoundVolume, masterMusicVolume);
-        }
-        if(isShapeCreationMode){
-            isNotInAnyMode = false;
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
-                    isAudioMode, isfileunsupported, isCollisionMode,
-                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
-                    &fov, &projection, 
-                    soundFiles, musicFiles,  // Pass the audio arrays
-                    masterVolume, masterSoundVolume, masterMusicVolume);
-        }
-        if(isAudioMode){
-            isNotInAnyMode = false;
-
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
-                    isAudioMode, isfileunsupported, isCollisionMode,
-                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
-                    &fov, &projection, 
-                    soundFiles, musicFiles,  // Pass the audio arrays
-                    masterVolume, masterSoundVolume, masterMusicVolume);
-        }
-        if(isCollisionMode){
-            isNotInAnyMode = false;
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
-                    isAudioMode, isfileunsupported, isCollisionMode,
-                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
-                    &fov, &projection, 
-                    soundFiles, musicFiles,  // Pass the audio arrays
-                    masterVolume, masterSoundVolume, masterMusicVolume);
-        }
-        if(isAssetManagementMode){
-            isNotInAnyMode = false;
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
-                    isAudioMode, isfileunsupported, isCollisionMode,
-                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
-                    &fov, &projection, 
-                    soundFiles, musicFiles,  // Pass the audio arrays
-                    masterVolume, masterSoundVolume, masterMusicVolume);
-        }
         // Draw the blank canvas (just a white background for now)
         // DrawText("Hold RMB to Enter CAMERA Mode", 250, 20, 20, DARKGRAY);
             if (removedSound && soundToRemove >= 0) {
