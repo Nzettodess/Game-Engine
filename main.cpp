@@ -140,6 +140,9 @@ void AddPlane(Vector3 position, Vector2 size, Color color) {
     planes[planeCount - 1] = (Plane){ position, size, color };
 }
 
+static int activeOption = 0;  // Tracks the selected projection mode
+static bool dropdownEditMode = false;  // Tracks whether the dropdown is being interacted with
+
 void DrawUnlimitedGrid(int gridSize, float gridStep) {
     // Draw the major grid lines (larger divisions)
     for (int i = -gridSize; i <= gridSize; i++) {
@@ -193,28 +196,44 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
         DrawText("Camera Settings", panelX + 10, 10, 20, WHITE);
 
         // Adjust rotation speed
-        DrawText("Rotation Speed", panelX + 10, 50, 16, WHITE);
+        DrawText("Rotation Speed", panelX + 10, 50, 20, WHITE);
         GuiSliderBar((Rectangle){ (float)(panelX + 10), 70.0f, 380.0f, 20.0f }, NULL, NULL, rotationSpeed, 0.1f, 2.0f);
 
         // Adjust pan speed
-        DrawText("Pan Speed", panelX + 10, 110, 16, WHITE);
+        DrawText("Pan Speed", panelX + 10, 110, 20, WHITE);
         GuiSliderBar((Rectangle){ (float)(panelX + 10), 130.0f, 380.0f, 20.0f }, NULL, NULL, panSpeed, 0.001f, 0.1f);
 
-         DrawText("Camera FOV", panelX + 10, 170, 16, WHITE);
+         DrawText("Camera FOV", panelX + 10, 170, 20, WHITE);
         GuiSliderBar((Rectangle){ (float)(panelX + 10), 190.0f, 380.0f, 20.0f }, NULL, NULL, fov, 30.0f, 120.0f);
 
         // Camera projection mode selection
-        DrawText("Projection Mode", panelX + 10, 230, 16, WHITE);
+        DrawText("Projection Mode", panelX + 10, 230, 20, WHITE);
         if (GuiButton((Rectangle){ panelX + 10, 250.0f, 180.0f, 30.0f }, "Perspective")) {
             *projection = CAMERA_PERSPECTIVE;
         }
         if (GuiButton((Rectangle){ panelX + 210, 250.0f, 180.0f, 30.0f }, "Orthographic")) {
             *projection = CAMERA_ORTHOGRAPHIC;
         }
+
+        // // Define the dropdown box
+        // if (GuiDropdownBox((Rectangle){panelX + 10, 250.0f, 180.0f, 30.0f}, "Perspective;Orthographic;First Person;Third Person;Orbital", &activeOption, dropdownEditMode)) {
+        //     dropdownEditMode = !dropdownEditMode;  // Toggle dropdown open/close state
+        // }
+
+        // // Update the projection based on the selected option
+        // if (!dropdownEditMode) {
+        //     if (activeOption == 0) *projection = CAMERA_PERSPECTIVE;
+        //     else if (activeOption == 1) *projection = CAMERA_ORTHOGRAPHIC;
+        //     else if (activeOption == 2) *projection = CAMERA_FIRST_PERSON;
+        //     else if (activeOption == 3) *projection = CAMERA_THIRD_PERSON;
+        //     else if (activeOption == 4) *projection = CAMERA_ORBITAL;
+        // }
+
         // Display instructions
         DrawText("WASD To Move, QE To Up/Down,", panelX + 10, 300, 20, WHITE);
         DrawText("MouseWheel To Zoom In/Out", panelX + 10, 330, 20, WHITE);
-        DrawText("Zero to Exit CAMERA Mode", panelX + 10, 360, 20, WHITE);
+        DrawText("Hold shift and move Mouse to pan", panelX + 10, 360, 20, WHITE);
+        DrawText("Zero to Exit CAMERA Mode", panelX + 10, 390, 20, WHITE);
     }else if(isShapeCreationMode){
         DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
         GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
@@ -261,6 +280,12 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
     }
     else if(isAudioMode){
         DrawText("Audio Mode", panelX + 10, 10, 20, WHITE);
+
+        DrawText("Drag and drop your audio files", panelX - 1300, 10, 20, BLACK);
+        DrawText("Format available: .ogg, .flac, .wav, .mp3", panelX - 1300, 40, 20, BLACK);
+        DrawText("Only 2 sound effects and 2 musics can be loaded at a time for this version", panelX - 1300, 70, 20, BLACK);
+        DrawText("You can remove the old the and add the new one", panelX - 1300, 100, 20, BLACK);
+
         
         // Master Volume Controls
         DrawText("Master Volume", panelX + 10, 40, 20, WHITE);
