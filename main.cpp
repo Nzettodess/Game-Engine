@@ -17,6 +17,8 @@ using namespace std;
 const int screenWidth = 1720;
 const int screenHeight = 880;
 
+typedef enum Mode { NONE = 0, CAMERA, SHAPE_CREATETION, AUDIO, COLLISION, ASSET_MANAGEMENT } Mode;
+
 // Audio handling structures
 typedef struct {
     Sound sound;
@@ -172,368 +174,366 @@ void DrawUnlimitedGrid(int gridSize, float gridStep) {
         }
     }
 }
-void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMode, 
-                 bool isAudioMode, bool& isfileunsupported, bool isCollisionMode,
-                 bool isAssetManagementMode, float* rotationSpeed, float* panSpeed, 
+
+void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpeed, float* panSpeed, 
                  float* fov, int* projection, 
                  SoundFile* soundFiles, MusicFile* musicFiles,  // Add these parameters
                  float& masterVolume, float& masterSoundVolume, float& masterMusicVolume)  // Add these parameters
-
     {
     //draw pane
     int panelWidth = 400;  // Width of the right panel
     int panelX = screenWidth - panelWidth;
     DrawRectangle(panelX, 0, panelWidth, screenHeight, BLACK);
+        
     //mode switch
-    if (isNotInAnyMode) {
-        DrawText("Information Pane", panelX + 10, 10, 20, WHITE);
+    switch(currentMode)
+        {
+            case NONE:
+            {
+                DrawText("Information Pane", panelX + 10, 10, 20, WHITE);
 
-        DrawText("Press RMB to Enter CAMERA Mode", panelX + 10, 50, 20, WHITE);
+                DrawText("Press RMB to Enter CAMERA Mode", panelX + 10, 50, 20, WHITE);
 
-        DrawText("Press A to Enter  ", panelX + 10, 100, 20, WHITE);
-        DrawText("SHAPE CREATION Mode", panelX + 10, 120, 20, WHITE);
+                DrawText("Press A to Enter  ", panelX + 10, 100, 20, WHITE);
+                DrawText("SHAPE CREATION Mode", panelX + 10, 120, 20, WHITE);
 
-        DrawText("Press M to Enter ", panelX + 10, 170, 20, WHITE);
-        DrawText("AUDIO Mode", panelX + 10, 190, 20, WHITE);
+                DrawText("Press M to Enter ", panelX + 10, 170, 20, WHITE);
+                DrawText("AUDIO Mode", panelX + 10, 190, 20, WHITE);
 
-        DrawText("Press XX to Enter ", panelX + 10, 240, 20, WHITE);
-        DrawText("COLLISION Mode", panelX + 10, 260, 20, WHITE);
+                DrawText("Press XX to Enter ", panelX + 10, 240, 20, WHITE);
+                DrawText("COLLISION Mode", panelX + 10, 260, 20, WHITE);
 
-        DrawText("Press XX to Enter ", panelX + 10, 310, 20, WHITE);
-        DrawText("ASSET MANAGEMENT Mode", panelX + 10, 330, 20, WHITE);
+                DrawText("Press XX to Enter ", panelX + 10, 310, 20, WHITE);
+                DrawText("ASSET MANAGEMENT Mode", panelX + 10, 330, 20, WHITE);
 
-        // DrawText("Press XX to Enter Shape CREATION Mode", panelX + 10, 80, 20, WHITE);
-    } else if (isCameraMode){
-        DrawText("Camera Settings", panelX + 10, 10, 20, WHITE);
+                // DrawText("Press XX to Enter Shape CREATION Mode", panelX + 10, 80, 20, WHITE);
+            } break;
+            case CAMERA:
+            {
+                DrawText("Camera Settings", panelX + 10, 10, 20, WHITE);
 
-        // Adjust rotation speed
-        DrawText("Rotation Speed", panelX + 10, 50, 20, WHITE);
-        GuiSliderBar((Rectangle){ (float)(panelX + 10), 70.0f, 380.0f, 20.0f }, NULL, NULL, rotationSpeed, 0.1f, 2.0f);
+                // Adjust rotation speed
+                DrawText("Rotation Speed", panelX + 10, 50, 20, WHITE);
+                GuiSliderBar((Rectangle){ (float)(panelX + 10), 70.0f, 380.0f, 20.0f }, NULL, NULL, rotationSpeed, 0.1f, 2.0f);
 
-        // Adjust pan speed
-        DrawText("Pan Speed", panelX + 10, 110, 20, WHITE);
-        GuiSliderBar((Rectangle){ (float)(panelX + 10), 130.0f, 380.0f, 20.0f }, NULL, NULL, panSpeed, 0.001f, 0.1f);
+                // Adjust pan speed
+                DrawText("Pan Speed", panelX + 10, 110, 20, WHITE);
+                GuiSliderBar((Rectangle){ (float)(panelX + 10), 130.0f, 380.0f, 20.0f }, NULL, NULL, panSpeed, 0.001f, 0.1f);
 
-         DrawText("Camera FOV", panelX + 10, 170, 20, WHITE);
-        GuiSliderBar((Rectangle){ (float)(panelX + 10), 190.0f, 380.0f, 20.0f }, NULL, NULL, fov, 30.0f, 120.0f);
+                DrawText("Camera FOV", panelX + 10, 170, 20, WHITE);
+                GuiSliderBar((Rectangle){ (float)(panelX + 10), 190.0f, 380.0f, 20.0f }, NULL, NULL, fov, 30.0f, 120.0f);
 
-        // Camera projection mode selection
-        DrawText("Projection Mode", panelX + 10, 230, 20, WHITE);
-        if (GuiButton((Rectangle){ panelX + 10, 250.0f, 180.0f, 30.0f }, "Perspective")) {
-            *projection = CAMERA_PERSPECTIVE;
-        }
-        if (GuiButton((Rectangle){ panelX + 210, 250.0f, 180.0f, 30.0f }, "Orthographic")) {
-            *projection = CAMERA_ORTHOGRAPHIC;
-        }
+                // Camera projection mode selection
+                DrawText("Projection Mode", panelX + 10, 230, 20, WHITE);
+                if (GuiButton((Rectangle){ panelX + 10, 250.0f, 180.0f, 30.0f }, "Perspective")) {
+                    *projection = CAMERA_PERSPECTIVE;
+                }
+                if (GuiButton((Rectangle){ panelX + 210, 250.0f, 180.0f, 30.0f }, "Orthographic")) {
+                    *projection = CAMERA_ORTHOGRAPHIC;
+                }
 
-        // // Define the dropdown box
-        // if (GuiDropdownBox((Rectangle){panelX + 10, 250.0f, 180.0f, 30.0f}, "Perspective;Orthographic;First Person;Third Person;Orbital", &activeOption, dropdownEditMode)) {
-        //     dropdownEditMode = !dropdownEditMode;  // Toggle dropdown open/close state
-        // }
+                // // Define the dropdown box
+                // if (GuiDropdownBox((Rectangle){panelX + 10, 250.0f, 180.0f, 30.0f}, "Perspective;Orthographic;First Person;Third Person;Orbital", &activeOption, dropdownEditMode)) {
+                //     dropdownEditMode = !dropdownEditMode;  // Toggle dropdown open/close state
+                // }
 
-        // // Update the projection based on the selected option
-        // if (!dropdownEditMode) {
-        //     if (activeOption == 0) *projection = CAMERA_PERSPECTIVE;
-        //     else if (activeOption == 1) *projection = CAMERA_ORTHOGRAPHIC;
-        //     else if (activeOption == 2) *projection = CAMERA_FIRST_PERSON;
-        //     else if (activeOption == 3) *projection = CAMERA_THIRD_PERSON;
-        //     else if (activeOption == 4) *projection = CAMERA_ORBITAL;
-        // }
+                // // Update the projection based on the selected option
+                // if (!dropdownEditMode) {
+                //     if (activeOption == 0) *projection = CAMERA_PERSPECTIVE;
+                //     else if (activeOption == 1) *projection = CAMERA_ORTHOGRAPHIC;
+                //     else if (activeOption == 2) *projection = CAMERA_FIRST_PERSON;
+                //     else if (activeOption == 3) *projection = CAMERA_THIRD_PERSON;
+                //     else if (activeOption == 4) *projection = CAMERA_ORBITAL;
+                // }
 
-        // Display instructions
-        DrawText("WASD To Move, QE To Up/Down,", panelX + 10, 300, 20, WHITE);
-        DrawText("MouseWheel To Zoom In/Out", panelX + 10, 330, 20, WHITE);
-        DrawText("Hold shift and move Mouse to pan", panelX + 10, 360, 20, WHITE);
-        DrawText("Zero to Exit CAMERA Mode", panelX + 10, 390, 20, WHITE);
-    }else if(isShapeCreationMode){
-        DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
-        GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
- // Create Cube
-    if (GuiButton((Rectangle){ 1345, 50, 350, 50 }, "Cube")) {
-        DrawText("Cube Created", 100, 200, 20, RED);
-        AddCube((Vector3){ 0.0f, 1.0f, 0.0f }, {2.0f, 2.0f, 2.0f}, BLUE);
-    }
+                // Display instructions
+                DrawText("WASD To Move, QE To Up/Down,", panelX + 10, 300, 20, WHITE);
+                DrawText("MouseWheel To Zoom In/Out", panelX + 10, 330, 20, WHITE);
+                DrawText("Hold shift and move Mouse to pan", panelX + 10, 360, 20, WHITE);
+                DrawText("Zero to Exit CAMERA Mode", panelX + 10, 390, 20, WHITE);
+
+            } break;
+            case SHAPE_CREATETION:
+            {
+                DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
+                GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+
+                 // Create Cube
+                if (GuiButton((Rectangle){ 1345, 50, 350, 50 }, "Cube")) {
+                    DrawText("Cube Created", 100, 200, 20, RED);
+                    AddCube((Vector3){ 0.0f, 1.0f, 0.0f }, {2.0f, 2.0f, 2.0f}, BLUE);
+                }
     
-    // Checkbox to enable collision for the last created Cube
-    if (cubeCount > 0) {
-        if (GuiCheckBox((Rectangle){ 1345, 110, 30, 30 }, " ", &cubes[cubeCount - 1].collisionActive)) {
-            // Toggle collisionActive for the last created cube
-        }
-        DrawText("Enable Collision", 1385, 110, 20, WHITE); // Text to the right of the checkbox
-    }
+                // Checkbox to enable collision for the last created Cube
+                if (cubeCount > 0) {
+                    if (GuiCheckBox((Rectangle){ 1345, 110, 30, 30 }, " ", &cubes[cubeCount - 1].collisionActive)) {
+                        // Toggle collisionActive for the last created cube
+                    }
+                    DrawText("Enable Collision", 1385, 110, 20, WHITE); // Text to the right of the checkbox
+                }
     
-    // Create Sphere
-    if (GuiButton((Rectangle){ 1345, 150, 350, 50 }, "Sphere")) {
-        DrawText("Sphere Created", 100, 200, 20, RED);
-        AddSphere((Vector3){ 0.0f, 1.0f, 0.0f }, 1.5f, RED);
-    }
+                // Create Sphere
+                if (GuiButton((Rectangle){ 1345, 150, 350, 50 }, "Sphere")) {
+                    DrawText("Sphere Created", 100, 200, 20, RED);
+                    AddSphere((Vector3){ 0.0f, 1.0f, 0.0f }, 1.5f, RED);
+                }
     
-    // Checkbox to enable collision for the last created Sphere
-    if (sphereCount > 0) {
-        if (GuiCheckBox((Rectangle){ 1345, 210, 30, 30 }, " ", &spheres[sphereCount - 1].collisionActive)) {
-            // Toggle collisionActive for the last created sphere
-        }
-        DrawText("Enable Collision", 1385, 210, 20, WHITE); // Text to the right of the checkbox
-    }
+                // Checkbox to enable collision for the last created Sphere
+                if (sphereCount > 0) {
+                    if (GuiCheckBox((Rectangle){ 1345, 210, 30, 30 }, " ", &spheres[sphereCount - 1].collisionActive)) {
+                        // Toggle collisionActive for the last created sphere
+                    }
+                    DrawText("Enable Collision", 1385, 210, 20, WHITE); // Text to the right of the checkbox
+                }
 
-    // Create Cylinder
-    if (GuiButton((Rectangle){ 1345, 250, 350, 50 }, "Cylinder")) {
-        DrawText("Cylinder Created", 100, 200, 20, RED);
-        AddCylinder((Vector3){ 0.0f, 1.0f, 0.0f }, 1.0f, 1.0f, 3.0f, 16, GREEN);
-    }
+                // Create Cylinder
+                if (GuiButton((Rectangle){ 1345, 250, 350, 50 }, "Cylinder")) {
+                    DrawText("Cylinder Created", 100, 200, 20, RED);
+                    AddCylinder((Vector3){ 0.0f, 1.0f, 0.0f }, 1.0f, 1.0f, 3.0f, 16, GREEN);
+                }
     
-    // Checkbox to enable collision for the last created Cylinder
-    if (cylinderCount > 0) {
-        if (GuiCheckBox((Rectangle){ 1345, 310, 30, 30 }, " ", &cylinders[cylinderCount - 1].collisionActive)) {
-            // Toggle collisionActive for the last created cylinder
-        }
-        DrawText("Enable Collision", 1385, 310, 20, WHITE); // Text to the right of the checkbox
-    }
+                // Checkbox to enable collision for the last created Cylinder
+                if (cylinderCount > 0) {
+                    if (GuiCheckBox((Rectangle){ 1345, 310, 30, 30 }, " ", &cylinders[cylinderCount - 1].collisionActive)) {
+                        // Toggle collisionActive for the last created cylinder
+                    }
+                    DrawText("Enable Collision", 1385, 310, 20, WHITE); // Text to the right of the checkbox
+                }
     
-    // Create Capsule
-    if (GuiButton((Rectangle){ 1345, 350, 350, 50 }, "Capsule")) {
-        DrawText("Capsule Created", 100, 200, 20, RED);
-        AddCapsule((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector3){ 0.0f, -1.0f, 0.0f }, 0.5f, 16, 8, GREEN);
-    }
+                // Create Capsule
+                if (GuiButton((Rectangle){ 1345, 350, 350, 50 }, "Capsule")) {
+                    DrawText("Capsule Created", 100, 200, 20, RED);
+                    AddCapsule((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector3){ 0.0f, -1.0f, 0.0f }, 0.5f, 16, 8, GREEN);
+                }
     
-    // Checkbox to enable collision for the last created Capsule
-    if (capsuleCount > 0) {
-        if (GuiCheckBox((Rectangle){ 1345, 410, 30, 30 }, " ", &capsules[capsuleCount - 1].collisionActive)) {
-            // Toggle collisionActive for the last created capsule
-        }
-        DrawText("Enable Collision", 1385, 410, 20, WHITE); // Text to the right of the checkbox
-    }
+                // Checkbox to enable collision for the last created Capsule
+                if (capsuleCount > 0) {
+                    if (GuiCheckBox((Rectangle){ 1345, 410, 30, 30 }, " ", &capsules[capsuleCount - 1].collisionActive)) {
+                        // Toggle collisionActive for the last created capsule
+                    }
+                    DrawText("Enable Collision", 1385, 410, 20, WHITE); // Text to the right of the checkbox
+                }
 
-    // Create Plane
-    if (GuiButton((Rectangle){ 1345, 450, 350, 50 }, "Plane")) {
-        DrawText("Plane Created", 100, 200, 20, RED);
-        AddPlane((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector2){ 3.0f, 3.0f }, DARKGRAY);
-    }
+                // Create Plane
+                if (GuiButton((Rectangle){ 1345, 450, 350, 50 }, "Plane")) {
+                    DrawText("Plane Created", 100, 200, 20, RED);
+                    AddPlane((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector2){ 3.0f, 3.0f }, DARKGRAY);
+                }
     
-    // Checkbox to enable collision for the last created Plane
-    if (planeCount > 0) {
-        if (GuiCheckBox((Rectangle){ 1345, 510, 30, 30 }, " ", &planes[planeCount - 1].collisionActive)) {
-            // Toggle collisionActive for the last created plane
-        }
-        DrawText("Enable Collision", 1385, 510, 20, WHITE); // Text to the right of the checkbox
-    }
+                // Checkbox to enable collision for the last created Plane
+                if (planeCount > 0) {
+                    if (GuiCheckBox((Rectangle){ 1345, 510, 30, 30 }, " ", &planes[planeCount - 1].collisionActive)) {
+                        // Toggle collisionActive for the last created plane
+                    }
+                    DrawText("Enable Collision", 1385, 510, 20, WHITE); // Text to the right of the checkbox
+                }
 
-    DrawText("Zero to Exit SHAPE CREATION Mode", panelX + 10, 550, 20, WHITE);   
-    }
-    else if(isAudioMode){
-        DrawText("Audio Mode", panelX + 10, 10, 20, WHITE);
+                DrawText("Zero to Exit SHAPE CREATION Mode", panelX + 10, 550, 20, WHITE);
+            } break;
+            case AUDIO:
+            {
+                DrawText("Audio Mode", panelX + 10, 10, 20, WHITE);
 
-        DrawText("Drag and drop your audio files", panelX - 1300, 10, 20, BLACK);
-        DrawText("Format available: .ogg, .flac, .wav, .mp3", panelX - 1300, 40, 20, BLACK);
-        DrawText("Only 2 sound effects and 2 musics can be loaded at a time for this version", panelX - 1300, 70, 20, BLACK);
-        DrawText("You can remove the old the and add the new one", panelX - 1300, 100, 20, BLACK);
-
-        
-        // Master Volume Controls
-        DrawText("Master Volume", panelX + 10, 40, 20, WHITE);
-        GuiSliderBar((Rectangle){ panelX + 10, 65, 380, 20 }, NULL, NULL, &masterVolume, 0.0f, 1.0f);
-        
-        
-        // Sound Master Volume
-        DrawText("Sound Master Volume", panelX + 10, 90, 20, WHITE);
-        GuiSliderBar((Rectangle){ panelX + 10, 115, 380, 20 }, NULL, NULL, &masterSoundVolume, 0.0f, 1.0f);
-        
-
-        // Music Master Volume
-        DrawText("Music Master Volume", panelX + 10, 140, 20, WHITE);
-        GuiSliderBar((Rectangle){ panelX + 10, 165, 380, 20 }, NULL, NULL, &masterMusicVolume, 0.0f, 1.0f);
-        
-        // Sound Effects Section
-        DrawText("Sound Effects", panelX + 10, 190, 20, WHITE);
-
-        
-        // Display loaded sounds and their controls
-        int yPos = 220;
-        for (int i = 0; i < MAX_AUDIO_FILES; i++) {
-            if (soundFiles[i].loaded) {
-                // Display sound name
-                DrawText(GetFileName(soundFiles[i].name), panelX + 10, yPos, 20, WHITE);
+                DrawText("Drag and drop your audio files", panelX - 1300, 10, 20, BLACK);
+                DrawText("Format available: .ogg, .flac, .wav, .mp3", panelX - 1300, 40, 20, BLACK);
+                DrawText("Only 2 sound effects and 2 musics can be loaded at a time for this version", panelX - 1300, 70, 20, BLACK);
+                DrawText("You can remove the old the and add the new one", panelX - 1300, 100, 20, BLACK);
+       
+                // Master Volume Controls
+                DrawText("Master Volume", panelX + 10, 40, 20, WHITE);
+                GuiSliderBar((Rectangle){ panelX + 10, 65, 380, 20 }, NULL, NULL, &masterVolume, 0.0f, 1.0f);
                 
-                // Play/Stop button
-                    if (GuiButton((Rectangle){ panelX + 10, yPos + 20, 50, 20 }, "Play")) {
-                        PlaySound(soundFiles[i].sound);
-                        soundFiles[i].isPlaying = true;
-                        cout << "Start";
+                // Sound Master Volume
+                DrawText("Sound Master Volume", panelX + 10, 90, 20, WHITE);
+                GuiSliderBar((Rectangle){ panelX + 10, 115, 380, 20 }, NULL, NULL, &masterSoundVolume, 0.0f, 1.0f);
+        
+                // Music Master Volume
+                DrawText("Music Master Volume", panelX + 10, 140, 20, WHITE);
+                GuiSliderBar((Rectangle){ panelX + 10, 165, 380, 20 }, NULL, NULL, &masterMusicVolume, 0.0f, 1.0f);
+        
+                // Sound Effects Section
+                DrawText("Sound Effects", panelX + 10, 190, 20, WHITE);
+        
+                // Display loaded sounds and their controls
+                int yPos = 220;
+                for (int i = 0; i < MAX_AUDIO_FILES; i++) {
+                    if (soundFiles[i].loaded) {
+                        // Display sound name
+                        DrawText(GetFileName(soundFiles[i].name), panelX + 10, yPos, 20, WHITE);
+                
+                        // Play/Stop button
+                        if (GuiButton((Rectangle){ panelX + 10, yPos + 20, 50, 20 }, "Play")) {
+                            PlaySound(soundFiles[i].sound);
+                            soundFiles[i].isPlaying = true;
+                            cout << "Start";
 
-                        // Immediately apply current volume settings
+                            // Immediately apply current volume settings
+                            SetSoundVolume(soundFiles[i].sound, soundFiles[i].volume * masterSoundVolume * masterVolume);
+                            SetSoundPitch(soundFiles[i].sound, soundFiles[i].pitch);
+                            SetSoundPan(soundFiles[i].sound, soundFiles[i].pan);
+                        }
+
+                        if (GuiButton((Rectangle){ panelX + 70, yPos + 20, 50, 20 }, "Stop")) {
+                            StopSound(soundFiles[i].sound);
+                            soundFiles[i].isPlaying = false;
+                            cout << "stopped";
+                        }
+
+                        // Pause/Resume button
+                        if (GuiButton((Rectangle){ panelX + 150, yPos + 20, 50, 20 }, "Pause")) {
+                            PauseSound(soundFiles[i].sound);              
+                        }
+                        if (GuiButton((Rectangle){ panelX + 210, yPos + 20, 50, 20 }, "Resume")) {
+                            ResumeSound(soundFiles[i].sound);
+                        }
+                    
+                        if (GuiButton((Rectangle){ panelX + 290, yPos + 20, 50, 20 }, "Remove")) {
+                            // Only remove the sound at the current index
+                            // if (soundFiles[i].loaded) {
+                            //     UnloadSound(soundFiles[i].sound);
+                        
+                            //     // Reset all properties for this specific index only
+                            //     soundFiles[i].loaded = false;
+                            //     // soundFiles[i].sound = LoadSound("");  // This might generate the warning but is necessary
+                            //     soundFiles[i] = (SoundFile){ 0 };
+                            //     soundFiles[i].volume = 1.0f;
+                            //     soundFiles[i].pitch = 1.0f;
+                            //     soundFiles[i].pan = 0.0f;
+                            //     soundFiles[i].isPlaying = false;
+                            //     soundFiles[i].wasPlaying = false;
+                            //     //memset(soundFiles[i].name, 0, sizeof(soundFiles[i].name));
+                        
+                            //     cout << "Removed sound at index " << i << std::endl;
+                            soundToRemove = i;  // Mark this index for removal
+                            removedSound = true;
+                        
+                        }
+                                                           
+                        // Volume slider
+                        DrawText("Volume", panelX + 10, yPos + 45, 20, WHITE);
+                        GuiSliderBar((Rectangle){ panelX + 80, yPos + 45, 300, 20 }, NULL, NULL, &soundFiles[i].volume, 0.0f, 1.0f);
                         SetSoundVolume(soundFiles[i].sound, soundFiles[i].volume * masterSoundVolume * masterVolume);
+                
+                        // Pitch slider
+                        DrawText("Pitch", panelX + 10, yPos + 70, 20, WHITE);
+                        GuiSliderBar((Rectangle){ panelX + 80, yPos + 70, 300, 20 }, NULL, NULL, &soundFiles[i].pitch, 0.5f, 2.0f);
                         SetSoundPitch(soundFiles[i].sound, soundFiles[i].pitch);
+                
+                        // Pan slider
+                        DrawText("Pan", panelX + 10, yPos + 95, 20, WHITE);
+                        GuiSliderBar((Rectangle){ panelX + 80, yPos + 95, 300, 20 }, NULL, NULL, &soundFiles[i].pan, -1.0f, 1.0f);
                         SetSoundPan(soundFiles[i].sound, soundFiles[i].pan);
-                    }
-
-                    if (GuiButton((Rectangle){ panelX + 70, yPos + 20, 50, 20 }, "Stop")) {
-                        StopSound(soundFiles[i].sound);
-                        soundFiles[i].isPlaying = false;
-                        cout << "stopped";
-                    }
-
-                    // Pause/Resume button
-                    if (GuiButton((Rectangle){ panelX + 150, yPos + 20, 50, 20 }, "Pause")) {
-                        PauseSound(soundFiles[i].sound);              
-                    }
-                    if (GuiButton((Rectangle){ panelX + 210, yPos + 20, 50, 20 }, "Resume")) {
-                        ResumeSound(soundFiles[i].sound);
-                    }
-                    
-                    if (GuiButton((Rectangle){ panelX + 290, yPos + 20, 50, 20 }, "Remove")) {
-                        // Only remove the sound at the current index
-                    // if (soundFiles[i].loaded) {
-                    //     UnloadSound(soundFiles[i].sound);
-                        
-                    //     // Reset all properties for this specific index only
-                    //     soundFiles[i].loaded = false;
-                    //     // soundFiles[i].sound = LoadSound("");  // This might generate the warning but is necessary
-                    //     soundFiles[i] = (SoundFile){ 0 };
-                    //     soundFiles[i].volume = 1.0f;
-                    //     soundFiles[i].pitch = 1.0f;
-                    //     soundFiles[i].pan = 0.0f;
-                    //     soundFiles[i].isPlaying = false;
-                    //     soundFiles[i].wasPlaying = false;
-                    //     //memset(soundFiles[i].name, 0, sizeof(soundFiles[i].name));
-                        
-                    //     cout << "Removed sound at index " << i << std::endl;
-                                soundToRemove = i;  // Mark this index for removal
-                                removedSound = true;
-                    
-    
-    }
-                                                  
-                    
-
                 
-                // Volume slider
-                DrawText("Volume", panelX + 10, yPos + 45, 20, WHITE);
-                GuiSliderBar((Rectangle){ panelX + 80, yPos + 45, 300, 20 }, NULL, NULL, &soundFiles[i].volume, 0.0f, 1.0f);
-                SetSoundVolume(soundFiles[i].sound, soundFiles[i].volume * masterSoundVolume * masterVolume);
-                
-                // Pitch slider
-                DrawText("Pitch", panelX + 10, yPos + 70, 20, WHITE);
-                GuiSliderBar((Rectangle){ panelX + 80, yPos + 70, 300, 20 }, NULL, NULL, &soundFiles[i].pitch, 0.5f, 2.0f);
-                SetSoundPitch(soundFiles[i].sound, soundFiles[i].pitch);
-                
-                // Pan slider
-                DrawText("Pan", panelX + 10, yPos + 95, 20, WHITE);
-                GuiSliderBar((Rectangle){ panelX + 80, yPos + 95, 300, 20 }, NULL, NULL, &soundFiles[i].pan, -1.0f, 1.0f);
-                SetSoundPan(soundFiles[i].sound, soundFiles[i].pan);
-                
-                yPos += 130;
-            }
-        }
+                        yPos += 130;
+                    }
+                }
         
-        // Music Section
-        DrawText("Music", panelX + 10, yPos, 20, WHITE);
+                // Music Section
+                DrawText("Music", panelX + 10, yPos, 20, WHITE);
         
-        yPos += 40;
-        for (int i = 0; i < MAX_AUDIO_FILES; i++) {
-            if (musicFiles[i].loaded) {
-                // Display music name
-                DrawText(GetFileName(musicFiles[i].name), panelX + 10, yPos, 20, WHITE);
+                yPos += 40;
+                for (int i = 0; i < MAX_AUDIO_FILES; i++) {
+                    if (musicFiles[i].loaded) {
+                        // Display music name
+                        DrawText(GetFileName(musicFiles[i].name), panelX + 10, yPos, 20, WHITE);
                 
-                // Display music length
-                float musicLength = GetMusicTimeLength(musicFiles[i].music);
-                char timeText[32];
-                sprintf(timeText, "Length: %.2f sec", musicLength);
-                DrawText(timeText, panelX + 10, yPos + 20, 16, WHITE);
-            
+                        // Display music length
+                        float musicLength = GetMusicTimeLength(musicFiles[i].music);
+                        char timeText[32];
+                        sprintf(timeText, "Length: %.2f sec", musicLength);
+                        DrawText(timeText, panelX + 10, yPos + 20, 16, WHITE);
 
-                if (GuiButton((Rectangle){ panelX + 10, yPos + 40, 50, 20 }, "Play")) {
-                        PlayMusicStream(musicFiles[i].music);
-                        musicFiles[i].isPlaying = true;
+                        if (GuiButton((Rectangle){ panelX + 10, yPos + 40, 50, 20 }, "Play")) {
+                                PlayMusicStream(musicFiles[i].music);
+                                musicFiles[i].isPlaying = true;
                         
-                        // Immediately apply current volume settings
+                                // Immediately apply current volume settings
+                                SetMusicVolume(musicFiles[i].music, musicFiles[i].volume * masterMusicVolume * masterVolume);
+                                SetMusicPitch(musicFiles[i].music, musicFiles[i].pitch * masterMusicVolume * masterVolume);
+                                SetMusicPan(musicFiles[i].music, musicFiles[i].pan * masterMusicVolume * masterVolume);
+                        }
+                        if (GuiButton((Rectangle){ panelX + 70, yPos + 40, 50, 20 }, "Stop")) {
+                            StopMusicStream(musicFiles[i].music);
+                            musicFiles[i].isPlaying = false;                   
+                        }
+
+                        // Pause/Resume button
+                        if (GuiButton((Rectangle){ panelX + 150, yPos + 40, 50, 20 }, "Pause")) {
+                            PauseMusicStream(musicFiles[i].music);       
+                            musicFiles[i].isPlaying = false;        
+                        }
+                        if (GuiButton((Rectangle){ panelX + 210, yPos + 40, 50, 20 }, "Resume")) {
+                            ResumeMusicStream(musicFiles[i].music);
+                            musicFiles[i].isPlaying = true;
+                        }
+                        if (GuiButton((Rectangle){ panelX + 290, yPos + 40, 50, 20 }, "Remove")) {
+                                // UnloadMusicStream(musicFiles[i].music);
+                                // musicFiles[i].music = LoadMusicStream("");  // Load empty music stream
+                                // musicFiles[i].volume = 1.0f;
+                                // musicFiles[i].pitch = 1.0f;
+                                // musicFiles[i].pan = 0.0f;
+                                // musicFiles[i].isPlaying = false;
+                                // musicFiles[i].wasPlaying = false;
+                                // musicFiles[i].loaded = false;
+                                musicToRemove = i;  // Mark this index for removal
+                                removedMusic = true;                        
+                        }
+                
+                
+                        // Volume slider
+                        DrawText("Volume", panelX + 10, yPos + 65, 20, WHITE);
+                        GuiSliderBar((Rectangle){ panelX + 80, yPos + 65, 300, 20 }, NULL, NULL, &musicFiles[i].volume, 0.0f, 1.0f);
                         SetMusicVolume(musicFiles[i].music, musicFiles[i].volume * masterMusicVolume * masterVolume);
+                
+                        // Pitch slider
+                        DrawText("Pitch", panelX + 10, yPos + 90, 20, WHITE);
+                        GuiSliderBar((Rectangle){ panelX + 80, yPos + 90, 300, 20 }, NULL, NULL, &musicFiles[i].pitch, 0.5f, 2.0f);
                         SetMusicPitch(musicFiles[i].music, musicFiles[i].pitch * masterMusicVolume * masterVolume);
+
+                        // Pan slider
+                        DrawText("Pan", panelX + 10, yPos + 115, 20, WHITE);
+                        GuiSliderBar((Rectangle){ panelX + 80, yPos + 115, 300, 20 }, NULL, NULL, &musicFiles[i].pan, -1.0f, 1.0f);
                         SetMusicPan(musicFiles[i].music, musicFiles[i].pan * masterMusicVolume * masterVolume);
-                }
-                if (GuiButton((Rectangle){ panelX + 70, yPos + 40, 50, 20 }, "Stop")) {
-                    StopMusicStream(musicFiles[i].music);
-                    musicFiles[i].isPlaying = false;
-                    
-                }
 
-                // Pause/Resume button
-                if (GuiButton((Rectangle){ panelX + 150, yPos + 40, 50, 20 }, "Pause")) {
-                    PauseMusicStream(musicFiles[i].music);       
-                    musicFiles[i].isPlaying = false;        
-                }
-                if (GuiButton((Rectangle){ panelX + 210, yPos + 40, 50, 20 }, "Resume")) {
-                    ResumeMusicStream(musicFiles[i].music);
-                    musicFiles[i].isPlaying = true;
-                }
-                if (GuiButton((Rectangle){ panelX + 290, yPos + 40, 50, 20 }, "Remove")) {
-                        // UnloadMusicStream(musicFiles[i].music);
-                        // musicFiles[i].music = LoadMusicStream("");  // Load empty music stream
-                        // musicFiles[i].volume = 1.0f;
-                        // musicFiles[i].pitch = 1.0f;
-                        // musicFiles[i].pan = 0.0f;
-                        // musicFiles[i].isPlaying = false;
-                        // musicFiles[i].wasPlaying = false;
-                        // musicFiles[i].loaded = false;
-                        musicToRemove = i;  // Mark this index for removal
-                        removedMusic = true;
-                        
+                        // Update music stream
+                        if (musicFiles[i].isPlaying) {
+                            UpdateMusicStream(musicFiles[i].music);
+                        }
+                
+                        yPos += 150;
                     }
-                
-                
-                // Volume slider
-                DrawText("Volume", panelX + 10, yPos + 65, 20, WHITE);
-                GuiSliderBar((Rectangle){ panelX + 80, yPos + 65, 300, 20 }, NULL, NULL, &musicFiles[i].volume, 0.0f, 1.0f);
-                SetMusicVolume(musicFiles[i].music, musicFiles[i].volume * masterMusicVolume * masterVolume);
-                
-                // Pitch slider
-                DrawText("Pitch", panelX + 10, yPos + 90, 20, WHITE);
-                GuiSliderBar((Rectangle){ panelX + 80, yPos + 90, 300, 20 }, NULL, NULL, &musicFiles[i].pitch, 0.5f, 2.0f);
-                SetMusicPitch(musicFiles[i].music, musicFiles[i].pitch * masterMusicVolume * masterVolume);
-
-                // Pan slider
-                DrawText("Pan", panelX + 10, yPos + 115, 20, WHITE);
-                GuiSliderBar((Rectangle){ panelX + 80, yPos + 115, 300, 20 }, NULL, NULL, &musicFiles[i].pan, -1.0f, 1.0f);
-                SetMusicPan(musicFiles[i].music, musicFiles[i].pan * masterMusicVolume * masterVolume);
-
-                // Update music stream
-                if (musicFiles[i].isPlaying) {
-                    UpdateMusicStream(musicFiles[i].music);
                 }
-                
-                yPos += 150;
-            }
-        }
         
-        DrawText("Zero to Exit Audio Mode", panelX + 10, screenHeight - 30, 20, WHITE);
+                DrawText("Zero to Exit Audio Mode", panelX + 10, screenHeight - 30, 20, WHITE);
 
-        if(isfileunsupported){
+                if(isfileunsupported){
 
-            int rectWidth = 500;
-            int rectHeight = 150;
-            int rectX = (screenWidth - rectWidth) / 2;
-            int rectY = (screenHeight - rectHeight) / 2;
+                    int rectWidth = 500;
+                    int rectHeight = 150;
+                    int rectX = (screenWidth - rectWidth) / 2;
+                    int rectY = (screenHeight - rectHeight) / 2;
             
-            DrawRectangle(rectX, rectY, rectWidth, rectHeight, DARKGRAY);
-            DrawText("Unsupported File Format", rectX+120, rectY+10, 20, WHITE);
-            DrawText("The file format is not supported.", rectX+70, rectY+40, 20, WHITE);
-            DrawText("Accepted Format: .wav, .ogg, .flac, .mp3", rectX+50, rectY+60, 20, WHITE);
-                if (GuiButton((Rectangle){ rectX+150, rectY+100, 180, 30 }, "OK")) {
-                    isfileunsupported = false;  // Close the message box
+                    DrawRectangle(rectX, rectY, rectWidth, rectHeight, DARKGRAY);
+                    DrawText("Unsupported File Format", rectX+120, rectY+10, 20, WHITE);
+                    DrawText("The file format is not supported.", rectX+70, rectY+40, 20, WHITE);
+                    DrawText("Accepted Format: .wav, .ogg, .flac, .mp3", rectX+50, rectY+60, 20, WHITE);
+                    if (GuiButton((Rectangle){ rectX+150, rectY+100, 180, 30 }, "OK")) {
+                        isfileunsupported = false;  // Close the message box
+                    }
                 }
+            } break;
+            case COLLISION:
+            {
+                DrawText("Collision Mode", panelX + 10, 10, 20, WHITE);
+                DrawText("Zero to Exit Collision Mode", panelX + 10, 360, 20, WHITE);
+            } break;
+            case ASSET_MANAGEMENT:
+            {
+                DrawText("Asset Management Mode", panelX + 10, 10, 20, WHITE);
+                DrawText("Zero to Exit Asset Management Mode", panelX + 10, 360, 20, WHITE);
+            } break;
+            default: break;
         }
-        
-        
-        
-    }
-    else if(isCollisionMode){
-        DrawText("Collision Mode", panelX + 10, 10, 20, WHITE);
-        DrawText("Zero to Exit Collision Mode", panelX + 10, 360, 20, WHITE);
-
-    }else if(isAssetManagementMode){
-        DrawText("Asset Management Mode", panelX + 10, 10, 20, WHITE);
-        DrawText("Zero to Exit Asset Management Mode", panelX + 10, 360, 20, WHITE);
-        
-    }
 }
 
 void InitializeAudioFiles() {
@@ -570,15 +570,8 @@ int main()
     SetMasterVolume(masterVolume);
 
     //Mode Switching
-    bool isNotInAnyMode = true;
-    bool isCameraMode = false;
-    bool isShapeCreationMode = false;
-    bool isAudioMode = false;
-        bool isfileunsupported = false;
-        
-    bool isCollisionMode = false;
-    bool isAssetManagementMode = false;
-        
+    Mode currentMode = NONE;    
+    bool isfileunsupported = false;   
 
     // Camera Param
     Camera camera = {0};
@@ -591,238 +584,246 @@ int main()
     float panSpeed = 0.01f;       // Adjust for panning speed
     float fov = 60.0f;            // Field of view
     int projection = CAMERA_PERSPECTIVE; // Projection type
-    
-
 
     SetTargetFPS(60);  // Set the game to run at 60 frames per second
 
     while (!WindowShouldClose())  // Detect window close button or ESC key
     {   
-                
-        //CameraMode Trigger
-        if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
-            isCameraMode = true;
-            isNotInAnyMode = false;
-        }
-        else if (IsKeyPressed(KEY_ZERO)){
-             isCameraMode = false;
-             isNotInAnyMode = true;
-         }
+        // Update
+        //----------------------------------------------------------------------------------
+        // TODO: Update MODE variables here!
+        switch(currentMode)
+        {
+            case NONE:
+            {
+                //CameraMode Trigger
+                if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
+                    currentMode = CAMERA;
+                }
 
-        //Shape Creation Mode Trigger
-        if(IsKeyPressed(KEY_A)){
-            isShapeCreationMode = true;
-            isNotInAnyMode = false;
-        }
-        else if (IsKeyPressed(KEY_ZERO)){
-             isShapeCreationMode = false;
-             isNotInAnyMode = true;
-         }
-         //Audio Mode
-        if(IsKeyPressed(KEY_M)){
-            isAudioMode = true;
-            isNotInAnyMode = false;
-        }
-        else if (IsKeyPressed(KEY_ZERO)){
-             isAudioMode = false;
-             isNotInAnyMode = true;
-         }
+                //Shape Creation Mode Trigger
+                if(IsKeyPressed(KEY_A)){
+                    currentMode =  SHAPE_CREATETION;
+                }
 
-         //Collision Mode
-         if(IsKeyPressed(KEY_C)){
-            isCollisionMode = true;
-            isNotInAnyMode = false;
-        }
-        else if (IsKeyPressed(KEY_ZERO)){
-             isCollisionMode = false;
-             isNotInAnyMode = true;
-         }
+                 //Audio Mode
+                if(IsKeyPressed(KEY_M)){
+                    currentMode = AUDIO;
+                }
 
-         //Asset Management Mode
-         if(IsKeyPressed(KEY_X)){
-            isAssetManagementMode = true;
-            isNotInAnyMode = false;
-        }
-        else if (IsKeyPressed(KEY_ZERO)){
-             isAssetManagementMode = false;
-             isNotInAnyMode = true;
-         }
-        
-        //Camera Mode Logic
-        if(isCameraMode){
+                 //Collision Mode
+                 if(IsKeyPressed(KEY_C)){
+                    currentMode = COLLISION;
+                }
 
-        Vector2 mouseDelta = GetMouseDelta();  // Get the mouse delta
+                 //Asset Management Mode
+                 if(IsKeyPressed(KEY_X)){
+                    currentMode = ASSET_MANAGEMENT;
+                }
 
-            // Define sensitivity for rotation and pan
-            // float rotationSpeed = 0.4f;   // Adjust for orbiting speed
-            // float panSpeed = 0.01f;       // Adjust for panning speed
+            } break;
+            case CAMERA:
+            {
+                Vector2 mouseDelta = GetMouseDelta();  // Get the mouse delta
 
-            // Check if Shift is held for panning; otherwise, orbit
-            if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
-                // Panning: Adjust camera position and target
-                Vector3 right = Vector3Normalize(Vector3CrossProduct(camera.up, Vector3Subtract(camera.target, camera.position)));
-                Vector3 up = camera.up;
+                // Define sensitivity for rotation and pan
+                // float rotationSpeed = 0.4f;   // Adjust for orbiting speed
+                // float panSpeed = 0.01f;       // Adjust for panning speed
 
-                Vector3 panOffset = Vector3Add(
+                // Check if Shift is held for panning; otherwise, orbit
+                if (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT)) {
+                    // Panning: Adjust camera position and target
+                    Vector3 right = Vector3Normalize(Vector3CrossProduct(camera.up, Vector3Subtract(camera.target, camera.position)));
+                    Vector3 up = camera.up;
+
+                    Vector3 panOffset = Vector3Add(
                     Vector3Scale(right, -mouseDelta.x * panSpeed),
                     Vector3Scale(up, mouseDelta.y * panSpeed)
+                    );
+
+                    camera.position = Vector3Add(camera.position, panOffset);
+                    camera.target = Vector3Add(camera.target, panOffset);
+                } 
+                else {
+                    // Orbiting: Rotate camera around the target
+                    Vector3 direction = Vector3Subtract(camera.position, camera.target);
+
+                    // Calculate yaw (horizontal) and pitch (vertical) rotations
+                    float yaw = -mouseDelta.x * rotationSpeed * DEG2RAD;
+                    float pitch = -mouseDelta.y * rotationSpeed * DEG2RAD;
+
+                    // Apply rotations using spherical coordinates
+                    Matrix rotationMatrix = MatrixRotateXYZ((Vector3){ pitch, yaw, 0.0f });
+                    direction = Vector3Transform(direction, rotationMatrix);
+
+                    // Update camera position based on the rotated direction
+                    camera.position = Vector3Add(camera.target, direction);
+
+                    // Prevent excessive pitch (clamping vertical rotation)
+                    if (fabsf(Vector3Angle(direction, camera.up) - PI/2) > PI/3) {
+                        camera.position.y = camera.target.y; // Reset to avoid flipping
+                    }
+                
+                }
+
+                // Update camera projection for movement
+                UpdateCameraPro(&camera,
+                (Vector3){
+                    (IsKeyDown(KEY_W)) * 0.1f - (IsKeyDown(KEY_S)) * 0.1f,  // Move forward-backward
+                    (IsKeyDown(KEY_D)) * 0.1f - (IsKeyDown(KEY_A)) * 0.1f,  // Move right-left
+                    0.0f  // Move up-down
+                },
+                (Vector3){ 0.0f, 0.0f, 0.0f },  // No rotation (set all to 0)
+                GetMouseWheelMove() * 2.0f  // Adjust camera zoom based on mouse wheel movement
                 );
 
-                camera.position = Vector3Add(camera.position, panOffset);
-                camera.target = Vector3Add(camera.target, panOffset);
-            } else {
-                // Orbiting: Rotate camera around the target
-                Vector3 direction = Vector3Subtract(camera.position, camera.target);
-
-                // Calculate yaw (horizontal) and pitch (vertical) rotations
-                float yaw = -mouseDelta.x * rotationSpeed * DEG2RAD;
-                float pitch = -mouseDelta.y * rotationSpeed * DEG2RAD;
-
-                // Apply rotations using spherical coordinates
-                Matrix rotationMatrix = MatrixRotateXYZ((Vector3){ pitch, yaw, 0.0f });
-                direction = Vector3Transform(direction, rotationMatrix);
-
-                // Update camera position based on the rotated direction
-                camera.position = Vector3Add(camera.target, direction);
-
-                // Prevent excessive pitch (clamping vertical rotation)
-                if (fabsf(Vector3Angle(direction, camera.up) - PI/2) > PI/3) {
-                    camera.position.y = camera.target.y; // Reset to avoid flipping
+                // Camera movement along the y-axis when Q and E are pressed (up and down)
+                if (IsKeyDown(KEY_Q)) {
+                    camera.position.y -= 0.1f;  // Move the camera downwards
+                    camera.target.y -= 0.1f;
                 }
-                
-            }
-            // Update camera projection for movement
-        UpdateCameraPro(&camera,
-            (Vector3){
-                (IsKeyDown(KEY_W)) * 0.1f - (IsKeyDown(KEY_S)) * 0.1f,  // Move forward-backward
-                (IsKeyDown(KEY_D)) * 0.1f - (IsKeyDown(KEY_A)) * 0.1f,  // Move right-left
-                0.0f  // Move up-down
-            },
-            (Vector3){ 0.0f, 0.0f, 0.0f },  // No rotation (set all to 0)
-            GetMouseWheelMove() * 2.0f  // Adjust camera zoom based on mouse wheel movement
-        );
+                if (IsKeyDown(KEY_E)) {
+                    camera.position.y += 0.1f;  // Move the camera upwards
+                    camera.target.y += 0.1f;
+                }
 
-        // Camera movement along the y-axis when Q and E are pressed (up and down)
-        if (IsKeyDown(KEY_Q)) {
-            camera.position.y -= 0.1f;  // Move the camera downwards
-            camera.target.y -= 0.1f;
-        }
-        if (IsKeyDown(KEY_E)) {
+                //Exit Mode
+                if (IsKeyPressed(KEY_ZERO)){
+                     currentMode = NONE;
+                }
 
-            camera.position.y += 0.1f;  // Move the camera upwards
-            camera.target.y += 0.1f;
-        }
-        }
-        //Shape Creation Mode
-        if(isShapeCreationMode){
+            } break;
+            case SHAPE_CREATETION:
+            {
 
-        }
-        //Audio Mode
-        if(isAudioMode){
+                //Exit Mode
+                if (IsKeyPressed(KEY_ZERO)){
+                     currentMode = NONE;
+                }
+            } break;
+            case AUDIO:
+            {
+                if (IsFileDropped()) {
 
-            if (IsFileDropped()) {
+                    FilePathList droppedFiles = LoadDroppedFiles();
 
-                FilePathList droppedFiles = LoadDroppedFiles();
-
-                for (unsigned int i = 0; i < droppedFiles.count; i++) {
-                    const char *filePath = droppedFiles.paths[i];
+                    for (unsigned int i = 0; i < droppedFiles.count; i++) {
+                        const char *filePath = droppedFiles.paths[i];
                     
-                    if (IsFileExtension(filePath, ".wav") || IsFileExtension(filePath, ".ogg") || IsFileExtension(filePath, ".flac") || IsFileExtension(filePath, ".mp3")) 
-                    {
-                        if (IsFileExtension(filePath, ".wav") || IsFileExtension(filePath, ".ogg") || IsFileExtension(filePath, ".flac")) {
-                            // Load as sound effect
-                            for (int j = 0; j < MAX_AUDIO_FILES; j++) {
-                                if (!soundFiles[j].loaded) {
-                                    soundFiles[j].sound = LoadSound(filePath);
-                                    strncpy(soundFiles[j].name, filePath, 255);
-                                    soundFiles[j].loaded = true;
-                                    soundFiles[j].volume = 1.0f;
-                                    soundFiles[j].pitch = 1.0f;
-                                    soundFiles[j].pan = 0.0f;
-                                    soundFiles[j].isPlaying = false;
-                                    break;
+                        if (IsFileExtension(filePath, ".wav") || IsFileExtension(filePath, ".ogg") || IsFileExtension(filePath, ".flac") || IsFileExtension(filePath, ".mp3")) 
+                        {
+                            if (IsFileExtension(filePath, ".wav") || IsFileExtension(filePath, ".ogg") || IsFileExtension(filePath, ".flac")) {
+                                // Load as sound effect
+                                for (int j = 0; j < MAX_AUDIO_FILES; j++) {
+                                    if (!soundFiles[j].loaded) {
+                                        soundFiles[j].sound = LoadSound(filePath);
+                                        strncpy(soundFiles[j].name, filePath, 255);
+                                        soundFiles[j].loaded = true;
+                                        soundFiles[j].volume = 1.0f;
+                                        soundFiles[j].pitch = 1.0f;
+                                        soundFiles[j].pan = 0.0f;
+                                        soundFiles[j].isPlaying = false;
+                                        break;
+                                    }
                                 }
-                            }
-                        } else if (IsFileExtension(filePath, ".mp3")) {
-                            // Load as music
-                            for (int j = 0; j < MAX_AUDIO_FILES; j++) {
-                                if (!musicFiles[j].loaded) {
-                                    musicFiles[j].music = LoadMusicStream(filePath);
-                                    strncpy(musicFiles[j].name, filePath, 255);
-                                    musicFiles[j].loaded = true;
-                                    musicFiles[j].volume = 1.0f;
-                                    musicFiles[j].pitch = 1.0f;
-                                    musicFiles[j].pan = 0.0f;
-                                    musicFiles[j].isPlaying = false;
-                                    
-                                    break;
+                            } 
+                            else if (IsFileExtension(filePath, ".mp3")) {
+                                // Load as music
+                                for (int j = 0; j < MAX_AUDIO_FILES; j++) {
+                                    if (!musicFiles[j].loaded) {
+                                        musicFiles[j].music = LoadMusicStream(filePath);
+                                        strncpy(musicFiles[j].name, filePath, 255);
+                                        musicFiles[j].loaded = true;
+                                        musicFiles[j].volume = 1.0f;
+                                        musicFiles[j].pitch = 1.0f;
+                                        musicFiles[j].pan = 0.0f;
+                                        musicFiles[j].isPlaying = false;                                    
+                                        break;
+                                    }
                                 }
                             }
                         }
+                        else {
+                            // Unsupported file format
+                            isfileunsupported = true;
+                        }
                     }
-                    else {
-                        // Unsupported file format
-                        isfileunsupported = true;
-                    }
+
+                    UnloadDroppedFiles(droppedFiles);
                 }
 
-                UnloadDroppedFiles(droppedFiles);
-            }
-            // Update master volume
-            SetMasterVolume(masterVolume);
+                // Update master volume
+                SetMasterVolume(masterVolume);
             
-            // Update all sound parameters
-            for (int i = 0; i < MAX_AUDIO_FILES; i++) {
-                if (soundFiles[i].loaded) {
-                    UpdateSoundParameters(&soundFiles[i]);
+                // Update all sound parameters
+                for (int i = 0; i < MAX_AUDIO_FILES; i++) {
+                    if (soundFiles[i].loaded) {
+                        UpdateSoundParameters(&soundFiles[i]);
                     
-                    // Check if sound just started playing
-                    if (soundFiles[i].isPlaying && !soundFiles[i].wasPlaying) {
-                        PlaySound(soundFiles[i].sound);
-                    }
-                    // Update previous state
-                    soundFiles[i].wasPlaying = soundFiles[i].isPlaying;
+                        // Check if sound just started playing
+                        if (soundFiles[i].isPlaying && !soundFiles[i].wasPlaying) {
+                            PlaySound(soundFiles[i].sound);
+                        }
+                        // Update previous state
+                        soundFiles[i].wasPlaying = soundFiles[i].isPlaying;
                     
-                    // Check if sound finished playing
-                    if (!IsSoundPlaying(soundFiles[i].sound) && soundFiles[i].isPlaying) {
-                        soundFiles[i].isPlaying = false;
+                        // Check if sound finished playing
+                        if (!IsSoundPlaying(soundFiles[i].sound) && soundFiles[i].isPlaying) {
+                            soundFiles[i].isPlaying = false;
+                        }
                     }
                 }
-            }
             
-            // Update all music parameters
-            for (int i = 0; i < MAX_AUDIO_FILES; i++) {
-                if (musicFiles[i].loaded) {
-                    UpdateMusicParameters(&musicFiles[i]);
+                // Update all music parameters
+                for (int i = 0; i < MAX_AUDIO_FILES; i++) {
+                    if (musicFiles[i].loaded) {
+                        UpdateMusicParameters(&musicFiles[i]);
                     
-                    // Check if music just started playing
-                    if (musicFiles[i].isPlaying && !musicFiles[i].wasPlaying) {
-                        PlayMusicStream(musicFiles[i].music);
-                    }
-                    // Update previous state
-                    musicFiles[i].wasPlaying = musicFiles[i].isPlaying;
+                        // Check if music just started playing
+                        if (musicFiles[i].isPlaying && !musicFiles[i].wasPlaying) {
+                            PlayMusicStream(musicFiles[i].music);
+                        }
+                        // Update previous state
+                        musicFiles[i].wasPlaying = musicFiles[i].isPlaying;
                     
-                    // Update music stream if playing
-                    if (musicFiles[i].isPlaying) {
-                        UpdateMusicStream(musicFiles[i].music);
+                        // Update music stream if playing
+                        if (musicFiles[i].isPlaying) {
+                            UpdateMusicStream(musicFiles[i].music);
                         
-                        // Check if music finished playing
-                        if (!IsMusicStreamPlaying(musicFiles[i].music)) {
-                            musicFiles[i].isPlaying = false;
+                            // Check if music finished playing
+                            if (!IsMusicStreamPlaying(musicFiles[i].music)) {
+                                musicFiles[i].isPlaying = false;
+                            }
                         }
                     }
                 }
-            }
 
-        }
-        //Collision Mode
-        if(isCollisionMode){
+                //Exit Mode
+                if (IsKeyPressed(KEY_ZERO)){
+                     currentMode = NONE;
+                }
 
-        }
-        //Assets Management Mode
-        if(isAssetManagementMode){
+            } break;
+            case COLLISION:
+            {
 
+                //Exit Mode
+                if (IsKeyPressed(KEY_ZERO)){
+                     currentMode = NONE;
+                }
+            } break;
+            case ASSET_MANAGEMENT:
+            {
+
+                //Exit Mode
+                if (IsKeyPressed(KEY_ZERO)){
+                     currentMode = NONE;
+                }
+            } break;
+            default: break;
         }
+        //----------------------------------------------------------------------------------
+
         //GUI Updater
         // Update FOV and projection mode based on GUI
         camera.fovy = fov;
@@ -886,9 +887,7 @@ for (int i = 0; i < planeCount; i++) {
         EndMode3D();
         
         //Draw GUI
-        DrawInfoPane(isNotInAnyMode, isCameraMode, isShapeCreationMode, 
-                    isAudioMode, isfileunsupported, isCollisionMode,
-                    isAssetManagementMode, &rotationSpeed, &panSpeed, 
+        DrawInfoPane(currentMode, isfileunsupported, &rotationSpeed, &panSpeed, 
                     &fov, &projection, 
                     soundFiles, musicFiles,
                     masterVolume, masterSoundVolume, masterMusicVolume);
