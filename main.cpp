@@ -154,9 +154,6 @@ void AddPlane(Vector3 position, Vector2 size, Color color) {
 }
 
 
-static int activeOption = 0;  // Tracks the selected projection mode
-static bool dropdownEditMode = false;  // Tracks whether the dropdown is being interacted with
-
 void DrawUnlimitedGrid(int gridSize, float gridStep) {
     // Draw the major grid lines (larger divisions)
     for (int i = -gridSize; i <= gridSize; i++) {
@@ -538,6 +535,7 @@ void DrawInfoPane(bool isNotInAnyMode, bool isCameraMode, bool isShapeCreationMo
         
     }
 }
+
 void InitializeAudioFiles() {
     for (int i = 0; i < MAX_AUDIO_FILES; i++) {
         // Sound Initialization
@@ -896,6 +894,8 @@ for (int i = 0; i < planeCount; i++) {
                     masterVolume, masterSoundVolume, masterMusicVolume);
         // Draw the blank canvas (just a white background for now)
         // DrawText("Hold RMB to Enter CAMERA Mode", 250, 20, 20, DARKGRAY);
+
+        //Remove Sound and Music main logic
             if (removedSound && soundToRemove >= 0) {
                 UnloadSound(soundFiles[soundToRemove].sound);
                 soundFiles[soundToRemove].sound = LoadSound("");
