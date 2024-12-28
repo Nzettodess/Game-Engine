@@ -237,7 +237,8 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
     int panelWidth = 400;  // Width of the right panel
     int panelX = screenWidth - panelWidth;
     DrawRectangle(panelX, 0, panelWidth, screenHeight, BLACK);
-        
+    // GuiSetStyle()    
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 18);
     //mode switch
     switch(currentMode)
         {
@@ -253,10 +254,10 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 DrawText("Press M to Enter ", panelX + 10, 170, 20, WHITE);
                 DrawText("AUDIO Mode", panelX + 10, 190, 20, WHITE);
 
-                DrawText("Press XX to Enter ", panelX + 10, 240, 20, WHITE);
+                DrawText("Press C to Enter ", panelX + 10, 240, 20, WHITE);
                 DrawText("COLLISION Mode", panelX + 10, 260, 20, WHITE);
 
-                DrawText("Press XX to Enter ", panelX + 10, 310, 20, WHITE);
+                DrawText("Press X to Enter ", panelX + 10, 310, 20, WHITE);
                 DrawText("ASSET MANAGEMENT Mode", panelX + 10, 330, 20, WHITE);
 
                 // DrawText("Press XX to Enter Shape CREATION Mode", panelX + 10, 80, 20, WHITE);
@@ -309,7 +310,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
             case SHAPE_CREATETION:
             {
                 DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
-                GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+                
 
                  // Create Cube
                 if (GuiButton((Rectangle){ 1345, 50, 350, 50 }, "Cube")) {
@@ -415,7 +416,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                         DrawText(GetFileName(soundFiles[i].name), panelX + 10, yPos, 20, WHITE);
                 
                         // Play/Stop button
-                        if (GuiButton((Rectangle){ panelX + 10, yPos + 20, 50, 20 }, "Play")) {
+                        if (GuiButton((Rectangle){ panelX + 10, yPos + 20, 50, 25 }, "Play")) {
                             PlaySound(soundFiles[i].sound);
                             soundFiles[i].isPlaying = true;
                             cout << "Start";
@@ -426,21 +427,21 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                             SetSoundPan(soundFiles[i].sound, soundFiles[i].pan);
                         }
 
-                        if (GuiButton((Rectangle){ panelX + 70, yPos + 20, 50, 20 }, "Stop")) {
+                        if (GuiButton((Rectangle){ panelX + 70, yPos + 20, 50, 25 }, "Stop")) {
                             StopSound(soundFiles[i].sound);
                             soundFiles[i].isPlaying = false;
                             cout << "stopped";
                         }
 
                         // Pause/Resume button
-                        if (GuiButton((Rectangle){ panelX + 150, yPos + 20, 50, 20 }, "Pause")) {
+                        if (GuiButton((Rectangle){ panelX + 140, yPos + 20, 65, 25 }, "Pause")) {
                             PauseSound(soundFiles[i].sound);              
                         }
-                        if (GuiButton((Rectangle){ panelX + 210, yPos + 20, 50, 20 }, "Resume")) {
+                        if (GuiButton((Rectangle){ panelX + 220, yPos + 20, 70, 25 }, "Resume")) {
                             ResumeSound(soundFiles[i].sound);
                         }
                     
-                        if (GuiButton((Rectangle){ panelX + 290, yPos + 20, 50, 20 }, "Remove")) {
+                        if (GuiButton((Rectangle){ panelX + 300, yPos + 20, 70, 25 }, "Remove")) {
                             // Only remove the sound at the current index
                             // if (soundFiles[i].loaded) {
                             //     UnloadSound(soundFiles[i].sound);
@@ -463,7 +464,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                         }
                                                            
                         // Volume slider
-                        DrawText("Volume", panelX + 10, yPos + 45, 20, WHITE);
+                        DrawText("Volume", panelX + 10, yPos + 65, 20, WHITE);
                         GuiSliderBar((Rectangle){ panelX + 80, yPos + 45, 300, 20 }, NULL, NULL, &soundFiles[i].volume, 0.0f, 1.0f);
                         SetSoundVolume(soundFiles[i].sound, soundFiles[i].volume * masterSoundVolume * masterVolume);
                 
@@ -496,7 +497,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                         sprintf(timeText, "Length: %.2f sec", musicLength);
                         DrawText(timeText, panelX + 10, yPos + 20, 16, WHITE);
 
-                        if (GuiButton((Rectangle){ panelX + 10, yPos + 40, 50, 20 }, "Play")) {
+                        if (GuiButton((Rectangle){ panelX + 10, yPos + 40, 50, 25 }, "Play")) {
                                 PlayMusicStream(musicFiles[i].music);
                                 musicFiles[i].isPlaying = true;
                         
@@ -505,21 +506,21 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                                 SetMusicPitch(musicFiles[i].music, musicFiles[i].pitch * masterMusicVolume * masterVolume);
                                 SetMusicPan(musicFiles[i].music, musicFiles[i].pan * masterMusicVolume * masterVolume);
                         }
-                        if (GuiButton((Rectangle){ panelX + 70, yPos + 40, 50, 20 }, "Stop")) {
+                        if (GuiButton((Rectangle){ panelX + 70, yPos + 40, 50, 25 }, "Stop")) {
                             StopMusicStream(musicFiles[i].music);
                             musicFiles[i].isPlaying = false;                   
                         }
 
                         // Pause/Resume button
-                        if (GuiButton((Rectangle){ panelX + 150, yPos + 40, 50, 20 }, "Pause")) {
+                        if (GuiButton((Rectangle){ panelX + 140, yPos + 40, 65, 25 }, "Pause")) {
                             PauseMusicStream(musicFiles[i].music);       
                             musicFiles[i].isPlaying = false;        
                         }
-                        if (GuiButton((Rectangle){ panelX + 210, yPos + 40, 50, 20 }, "Resume")) {
+                        if (GuiButton((Rectangle){ panelX + 220, yPos + 40, 70, 25 }, "Resume")) {
                             ResumeMusicStream(musicFiles[i].music);
                             musicFiles[i].isPlaying = true;
                         }
-                        if (GuiButton((Rectangle){ panelX + 290, yPos + 40, 50, 20 }, "Remove")) {
+                        if (GuiButton((Rectangle){ panelX + 300, yPos + 40, 70, 25 }, "Remove")) {
                                 // UnloadMusicStream(musicFiles[i].music);
                                 // musicFiles[i].music = LoadMusicStream("");  // Load empty music stream
                                 // musicFiles[i].volume = 1.0f;
@@ -578,22 +579,22 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
             case COLLISION:
             {
                 DrawText("Collision Mode", panelX + 10, 10, 20, WHITE);
-                DrawText("Zero to Exit Collision Mode", panelX + 10, 360, 20, WHITE);
+                DrawText("Zero to Exit Collision Mode", panelX + 10, screenHeight - 30, 20, WHITE);
             } break;
             case ASSET_MANAGEMENT:
             {
                 DrawText("Asset Management Mode", panelX + 10, 10, 20, WHITE);
-                DrawText("Zero to Exit Asset Management Mode", panelX + 10, 360, 20, WHITE);
+                DrawText("Zero to Exit Asset Management Mode", panelX + 10, screenHeight - 30, 20, WHITE);
 
                 if (selectedModelIndex != -1) {
             ModelData *selectedModel = &models[selectedModelIndex];
 
-            GuiPanel((Rectangle){10, 10, 250, 300}, "Asset Management");
-            GuiLabel((Rectangle){20, 20, 200, 20}, "Transform Settings");
+            GuiPanel((Rectangle){panelX + 10, 10, 380, 350}, "Asset Management");
+            GuiLabel((Rectangle){panelX + 20, 40, 200, 20}, "Transform Settings");
 
-            GuiLabel((Rectangle){20, 50, 100, 20}, "Position:");
+            GuiLabel((Rectangle){panelX + 20, 70, 100, 20}, "Position:");
             for (int i = 0; i < 3; i++) {
-                if (GuiTextBox((Rectangle){100 + (i * 55), 50, 50, 20}, positionInputs[i], 32, positionEdit[i])) {
+                if (GuiTextBox((Rectangle){panelX + 120 + (i * 55), 70, 50, 20}, positionInputs[i], 32, positionEdit[i])) {
                     positionEdit[i] = !positionEdit[i];
                     switch (i)
                     {
@@ -612,9 +613,9 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 }
             }
 
-            GuiLabel((Rectangle){20, 80, 100, 20}, "Rotation:");
+            GuiLabel((Rectangle){panelX + 20, 100, 100, 20}, "Rotation:");
             for (int i = 0; i < 3; i++) {
-                if (GuiTextBox((Rectangle){100 + (i * 55), 80, 50, 20}, rotationInputs[i], 32, rotationEdit[i])) {
+                if (GuiTextBox((Rectangle){panelX + 120 + (i * 55), 100, 50, 20}, rotationInputs[i], 32, rotationEdit[i])) {
                     rotationEdit[i] = !rotationEdit[i];
                     switch (i)
                     {
@@ -633,9 +634,9 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 }
             }
 
-            GuiLabel((Rectangle){20, 110, 100, 20}, "Scale:");
+            GuiLabel((Rectangle){panelX + 20, 130, 100, 20}, "Scale:");
             for (int i = 0; i < 3; i++) {
-                if (GuiTextBox((Rectangle){100 + (i * 55), 110, 50, 20}, scaleInputs[i], 32, scaleEdit[i])) {
+                if (GuiTextBox((Rectangle){panelX + 120 + (i * 55), 130, 50, 20}, scaleInputs[i], 32, scaleEdit[i])) {
                     scaleEdit[i] = !scaleEdit[i];
                     switch (i)
                     {
@@ -654,15 +655,15 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 }
              }
 
-            GuiLabel((Rectangle){20, 150, 200, 20}, TextFormat("Current Mode: %s", modes[currentAssetMode]));
-            if (GuiDropdownBox((Rectangle){20, 180, 100, 20}, "Position;Rotation;Scale", &currentAssetMode, isdropDown)) {
+            GuiLabel((Rectangle){panelX + 20, 170, 200, 20}, TextFormat("Current Mode: %s", modes[currentAssetMode]));
+            if (GuiDropdownBox((Rectangle){panelX + 20, 200, 120, 25}, "Position;Rotation;Scale", &currentAssetMode, isdropDown)) {
                 isdropDown = !isdropDown;
             }           
 
             UpdateModelTransform(selectedModel);
 
             //Delete button
-            if (GuiButton((Rectangle){20, 270, 100, 30}, "Delete")) {
+            if (GuiButton((Rectangle){panelX + 20, 330, 100, 30}, "Delete")) {
                 UnloadModel(selectedModel->model);
                 if (models[selectedModelIndex].texture.id != 0) {
                     UnloadTexture(models[selectedModelIndex].texture);
