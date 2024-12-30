@@ -1031,8 +1031,6 @@ int main()
     float fov = 60.0f;            // Field of view
     int projection = CAMERA_PERSPECTIVE; // Projection type
 
-    
-
     SetTargetFPS(60);  // Set the game to run at 60 frames per second
 
     while (!WindowShouldClose())  // Detect window close button or ESC key
@@ -1510,7 +1508,6 @@ int main()
             }
         }
 
-        
         // Draw grid in 3D space
         DrawUnlimitedGrid(GRID_SIZE, GRID_STEP);  // Drawing the "unlimited" grid
 
