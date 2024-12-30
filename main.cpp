@@ -19,7 +19,7 @@ using namespace std;
 const int screenWidth = 1720;
 const int screenHeight = 880;
 
-typedef enum Mode { NONE = 0, CAMERA, SHAPE_CREATETION, AUDIO, COLLISION, ASSET_MANAGEMENT } Mode;
+typedef enum Mode { NONE = 0, CAMERA, SHAPE_CREATETION, AUDIO, COLLISION, ASSET_MANAGEMENT, TEST } Mode;
 
 // Enum for axis types
 typedef enum AxisType {
@@ -973,6 +973,11 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
             }
         }
             } break;
+            case TEST:
+            {
+                DrawText("TEST PLAY Mode", panelX + 10, 10, 20, WHITE);
+                DrawText("F1 to Exit TEST PLAY Mode", panelX + 10, screenHeight - 30, 20, WHITE);
+            } break;
             default: break;
         }
 }
@@ -1062,6 +1067,11 @@ int main()
                  //Asset Management Mode
                  if(IsKeyPressed(KEY_X)){
                     currentMode = ASSET_MANAGEMENT;
+                }
+
+                 //Test Play Mode
+                 if(IsKeyPressed(KEY_T)){
+                    currentMode = TEST;
                 }
 
             } break;
@@ -1382,6 +1392,58 @@ int main()
                      currentMode = NONE;
                 }
             } break;
+            case TEST:
+            {
+                Vector2 mouseDelta = GetMouseDelta();  // Get the mouse delta
+                DisableCursor();
+                
+
+                // Orbiting: Rotate camera around the target
+                    Vector3 direction = Vector3Subtract(camera.position, camera.target);
+
+                    // Calculate yaw (horizontal) and pitch (vertical) rotations
+                    float yaw = -mouseDelta.x * rotationSpeed * DEG2RAD;
+                    float pitch = -mouseDelta.y * rotationSpeed * DEG2RAD;
+
+                    // Apply rotations using spherical coordinates
+                    Matrix rotationMatrix = MatrixRotateXYZ((Vector3){ pitch, yaw, 0.0f });
+                    direction = Vector3Transform(direction, rotationMatrix);
+
+                    // Update camera position based on the rotated direction
+                    camera.position = Vector3Add(camera.target, direction);
+
+                    // Prevent excessive pitch (clamping vertical rotation)
+                    //if (fabsf(Vector3Angle(direction, camera.up) - PI/2) > PI/3) {
+                    //    camera.position.y = camera.target.y; // Reset to avoid flipping
+                    //}
+
+                // Update camera projection for movement
+                UpdateCameraPro(&camera,
+                (Vector3){
+                    (IsKeyDown(KEY_W)) * 0.1f - (IsKeyDown(KEY_S)) * 0.1f,  // Move forward-backward
+                    (IsKeyDown(KEY_D)) * 0.1f - (IsKeyDown(KEY_A)) * 0.1f,  // Move right-left
+                    0.0f  // Move up-down
+                },
+                (Vector3){ 0.0f, 0.0f, 0.0f },  // No rotation (set all to 0)
+                GetMouseWheelMove() * 2.0f  // Adjust camera zoom based on mouse wheel movement
+                );
+
+                // Camera movement along the y-axis when Q and E are pressed (up and down)
+                if (IsKeyDown(KEY_Q)) {
+                    camera.position.y -= 0.1f;  // Move the camera downwards
+                    camera.target.y -= 0.1f;
+                }
+                if (IsKeyDown(KEY_E)) {
+                    camera.position.y += 0.1f;  // Move the camera upwards
+                    camera.target.y += 0.1f;
+                }
+
+                //Exit Mode
+                if (IsKeyPressed(KEY_F1)){
+                     currentMode = NONE;
+                     ShowCursor();
+                }
+            } break;
             default: break;
         }
         //----------------------------------------------------------------------------------
@@ -1442,7 +1504,7 @@ int main()
         for (int i = 0; i < modelCount; i++) {
             DrawModel(models[i].model, models[i].position, 1.0f, WHITE);
 
-            if (models[i].selected) {
+            if (models[i].selected && currentMode == ASSET_MANAGEMENT) {
                 DrawBoundingBox(models[i].bounds, GREEN);
                 DrawAxisArrows(models[i].position, 100.0f);
             }
