@@ -180,18 +180,67 @@ float cubesizex = 2.0;
 float cubesizey = 2.0;
 float cubesizez = 2.0;
 float cubehue = 150.0;
+char cubepositionInputs[3][32] = {"0.0", "1.0", "0.0"};
+bool cubepositionEdit[3] = {false, false, false};
+char cubesizeInputs[3][32] = {"2.0", "2.0", "2.0"};
+bool cubesizeEdit[3] = {false, false, false};
 
 // Sphere
 Sphere* spheres = NULL;
 int sphereCount = 0;
+float sphereposx = 0.0;
+float sphereposy = 1.0;
+float sphereposz = 0.0;
+float sphererad = 1.5;
+float spherehue = 150.0;
+bool radiusEdit = false;
+char radiusInput[32] = "2.0";
+char spherepositionInputs[3][32] = {"0.0", "1.0", "0.0"};
+bool spherepositionEdit[3] = {false, false, false};
 
 //cylinder
 Cylinder* cylinders = NULL;
 int cylinderCount = 0;
+float cylinderposx = 0.0;
+float cylinderposy = 1.0;
+float cylinderposz = 0.0;
+float cylinderradtop = 1.0;
+float cylinderradbottom = 1.0;
+float cylinderheight = 3.0;
+int cylinderslices = 16;
+float cylinderhue = 150.0;
+char cylinderpositionInputs[3][32] = {"0.0", "1.0", "0.0"};
+bool cylinderpositionEdit[3] = {false, false, false};
+bool cylinderradiusEdit[2] = {false, false};
+char cylinderradiusInput[2][32] = {"2.0", "2.0"};
+bool cylinderheightEdit = false;
+char cylinderheightInput[32] = "3";
+bool cylinderslicesEdit = false;
+char cylinderslicesInput[32] = "16";
 
 //capsule
 Capsule* capsules = NULL;
 int capsuleCount = 0;
+float capsulestartposx = 0.0;
+float capsulestartposy = 1.0;
+float capsulestartposz = 0.0;
+float capsuleendposx = 0.0;
+float capsuleendposy = -1.0;
+float capsuleendposz = 0.0;
+float capsulerad = 0.5f;
+int capsuleslices = 16;
+int capsulering = 8;
+float capsulehue = 150.0;
+char capsulestartpositionInputs[3][32] = {"0.0", "1.0", "0.0"};
+bool capsulestartpositionEdit[3] = {false, false, false};
+char capsuleendpositionInputs[3][32] = {"0.0", "-1.0", "0.0"};
+bool capsuleendpositionEdit[3] = {false, false, false};
+bool capsuleradiusEdit = false;
+char capsuleradiusInput[32] = "0.5";
+bool capsuleslicesEdit = false;
+char capsuleslicesInput[32] = "16";
+bool capsuleringEdit = false;
+char capsuleringInput[32] = "8";
 
 //plane
 Plane* planes = NULL;
@@ -201,8 +250,12 @@ float planeposy = 1.0;
 float planeposz = 0.0;
 float planesizex = 2.0;
 float planesizey = 2.0;
-float planesizez = 2.0;
 float planehue = 150.0;
+char planepositionInputs[3][32] = {"0.0", "1.0", "0.0"};
+bool planepositionEdit[3] = {false, false, false};
+char planesizeInputs[2][32] = {"2.0", "2.0"};
+bool planesizeEdit[2] = {false, false};
+
 
 Color HSLToRGB(float hue, float saturation, float lightness) {
     float c = (1 - fabs(2 * lightness - 1)) * saturation;
@@ -359,28 +412,29 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 //DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
                 GuiPanel((Rectangle){panelX + 10, 10, 380, 750}, "Shape Creation Mode");
 
+                    //Cube
                     GuiLabel((Rectangle){panelX + 130, 50, 100, 20}, "Position:");
                     for (int i = 0; i < 3; i++) {
-                        if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 50, 50, 20}, positionInputs[i], 32, positionEdit[i])) {
-                            positionEdit[i] = !positionEdit[i]; // Toggle edit state
-                            if (!positionEdit[i]) { // If edit finished, update value
+                        if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 50, 50, 20}, cubepositionInputs[i], 32, cubepositionEdit[i])) {
+                            cubepositionEdit[i] = !cubepositionEdit[i]; // Toggle edit state
+                            if (!cubepositionEdit[i]) { // If edit finished, update value
                                 switch (i) {
-                                    case 0: cubeposx = atof(positionInputs[i]); break;
-                                    case 1: cubeposy = atof(positionInputs[i]); break;
-                                    case 2: cubeposz = atof(positionInputs[i]); break;
+                                    case 0: cubeposx = atof(cubepositionInputs[i]); break;
+                                    case 1: cubeposy = atof(cubepositionInputs[i]); break;
+                                    case 2: cubeposz = atof(cubepositionInputs[i]); break;
                                 }
                             }
                         }
                     }
                     GuiLabel((Rectangle){panelX + 160, 75, 100, 20}, "Size:");
                     for (int i = 0; i < 3; i++) {
-                        if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 75, 50, 20}, positionInputs[i], 32, positionEdit[i])) {
-                            positionEdit[i] = !positionEdit[i]; // Toggle edit state
-                            if (!positionEdit[i]) { // If edit finished, update value
+                        if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 75, 50, 20}, cubesizeInputs[i], 32, cubepositionEdit[i])) {
+                            cubepositionEdit[i] = !cubepositionEdit[i]; // Toggle edit state
+                            if (!cubepositionEdit[i]) { // If edit finished, update value
                                 switch (i) {
-                                    case 0: cubesizex = atof(positionInputs[i]); break;
-                                    case 1: cubesizey = atof(positionInputs[i]); break;
-                                    case 2: cubesizez = atof(positionInputs[i]); break;
+                                    case 0: cubesizex = atof(cubesizeInputs[i]); break;
+                                    case 1: cubesizey = atof(cubesizeInputs[i]); break;
+                                    case 2: cubesizez = atof(cubesizeInputs[i]); break;
                                 }
                             }
                         }
@@ -403,11 +457,38 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 //     }
                 //     DrawText("Enable Collision", 1385, 110, 20, WHITE); // Text to the right of the checkbox
                 // }
-    
+                
+                //Sphere
+                GuiLabel((Rectangle){panelX + 130, 150, 100, 20}, "Position:");
+                    for (int i = 0; i < 3; i++) {
+                        if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 150, 50, 20}, spherepositionInputs[i], 32, spherepositionEdit[i])) {
+                            spherepositionEdit[i] = !spherepositionEdit[i]; // Toggle edit state
+                            if (!spherepositionEdit[i]) { // If edit finished, update value
+                                switch (i) {
+                                    case 0: sphereposx = atof(spherepositionInputs[i]); break;
+                                    case 1: sphereposy = atof(spherepositionInputs[i]); break;
+                                    case 2: sphereposz = atof(spherepositionInputs[i]); break;
+                                }
+                            }
+                        }
+                    }
+                    GuiLabel((Rectangle){panelX + 140, 175, 100, 20}, "Radius:");
+                    
+                        if (GuiTextBox((Rectangle){panelX + 145 + (1 * 55), 175, 50, 20}, radiusInput, 32, radiusEdit)) {
+                            radiusEdit = !radiusEdit; // Toggle edit state
+                            if (!radiusEdit) { // If edit finished, update value
+                                sphererad = atof(radiusInput);
+                                
+                            }
+                        }
+                    
+                    GuiSlider((Rectangle){(float)(panelX + 200), 200.0f, 105.0f, 20.0f}, "Hue", NULL, &spherehue, 0, 360);
+                    Color spherecolor = HSLToRGB(spherehue, saturation, lightness);
+                    DrawRectangle(1630, 200, 50, 20, spherecolor);
+
                 // Create Sphere
                 if (GuiButton((Rectangle){ 1340, 150, 100, 50 }, "Sphere")) {
-                    DrawText("Sphere Created", 100, 200, 20, RED);
-                    AddSphere((Vector3){ 0.0f, 1.0f, 0.0f }, 1.5f, RED);
+                    AddSphere((Vector3){ sphereposx, sphereposy, sphereposz }, sphererad, spherecolor);
                 }
     
                 // Checkbox to enable collision for the last created Sphere
@@ -417,13 +498,62 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 //     }
                 //     DrawText("Enable Collision", 1385, 210, 20, WHITE); // Text to the right of the checkbox
                 // }
+                
 
+                //cylinder
+                GuiLabel((Rectangle){panelX + 130, 250, 100, 20}, "Position:");
+                    for (int i = 0; i < 3; i++) {
+                    if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 250, 50, 20}, cylinderpositionInputs[i], 32, cylinderpositionEdit[i])) {
+                            cylinderpositionEdit[i] = !cylinderpositionEdit[i]; // Toggle edit state
+                            if (!cylinderpositionEdit[i]) { // If edit finished, update value
+                                switch (i) {
+                                    case 0: cylinderposx = atof(cylinderpositionInputs[i]); break;
+                                    case 1: cylinderposy = atof(cylinderpositionInputs[i]); break;
+                                    case 2: cylinderposz = atof(cylinderpositionInputs[i]); break;
+                                }
+                            }
+                        }
+                    }
+                    GuiLabel((Rectangle){panelX + 140, 275, 100, 20}, "Radius:");
+                    for (int i = 0; i < 2; i++) {
+                    if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 275, 50, 20}, cylinderradiusInput[i], 32,cylinderradiusEdit[i])) {
+                            cylinderradiusEdit[i] = !cylinderradiusEdit[i]; // Toggle edit state
+                            if (!cylinderradiusEdit[i]) { // If edit finished, update value
+                                switch (i) {
+                                    case 0: cylinderradtop = atof(cylinderradiusInput[i]); break;
+                                    case 1: cylinderradbottom = atof(cylinderradiusInput[i]); break;
+                                }
+                            }
+                        }
+                    }   
+                    GuiLabel((Rectangle){panelX + 140, 300, 100, 20}, "Height:");
+                
+                    if (GuiTextBox((Rectangle){panelX + 145 + (1 * 55), 300, 50, 20}, cylinderheightInput, 32, cylinderheightEdit)) {
+                        cylinderheightEdit = !cylinderheightEdit; // Toggle edit state
+                        if (!cylinderheightEdit) { // If edit finished, update value
+                            cylinderheight = atof(cylinderheightInput);
+                            
+                        }
+                    }
+
+                    GuiLabel((Rectangle){panelX + 140, 325, 100, 20}, "Slices:");
+                
+                    if (GuiTextBox((Rectangle){panelX + 145 + (1 * 55), 325, 50, 20}, cylinderslicesInput, 32, cylinderslicesEdit)) {
+                        cylinderslicesEdit = !cylinderslicesEdit; // Toggle edit state
+                        if (!cylinderslicesEdit) { // If edit finished, update value
+                            cylinderslices = atof(cylinderslicesInput);
+                            
+                        }
+                    }
+                GuiSlider((Rectangle){(float)(panelX + 200), 350.0f, 105.0f, 20.0f}, "Hue", NULL, &cylinderhue, 0, 360);
+                Color cylindercolor = HSLToRGB(cylinderhue, saturation, lightness);
+                DrawRectangle(1630, 350, 50, 20, cylindercolor);
                 // Create Cylinder
                 if (GuiButton((Rectangle){ 1340, 250, 100, 50 }, "Cylinder")) {
-                    DrawText("Cylinder Created", 100, 200, 20, RED);
-                    AddCylinder((Vector3){ 0.0f, 1.0f, 0.0f }, 1.0f, 1.0f, 3.0f, 16, GREEN);
+                    AddCylinder((Vector3){cylinderposx, cylinderposy, cylinderposz }, 
+                    cylinderradtop, cylinderradbottom, cylinderheight, cylinderslices, cylindercolor);
                 }
-    
+                
                 // Checkbox to enable collision for the last created Cylinder
                 // if (cylinderCount > 0) {
                 //     if (GuiCheckBox((Rectangle){ 1345, 310, 30, 30 }, " ", &cylinders[cylinderCount - 1].collisionActive)) {
@@ -431,11 +561,69 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 //     }
                 //     DrawText("Enable Collision", 1385, 310, 20, WHITE); // Text to the right of the checkbox
                 // }
-    
+                
+                //capsule
+            GuiLabel((Rectangle){panelX + 150, 400, 100, 20}, "Pos 1:");
+                    for (int i = 0; i < 3; i++) {
+                    if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 400, 50, 20}, capsulestartpositionInputs[i], 32, capsulestartpositionEdit[i])) {
+                            capsulestartpositionEdit[i] = !capsulestartpositionEdit[i]; // Toggle edit state
+                            if (!capsulestartpositionEdit[i]) { // If edit finished, update value
+                                switch (i) {
+                                    case 0: capsulestartposx = atof(capsulestartpositionInputs[i]); break;
+                                    case 1: capsulestartposy = atof(capsulestartpositionInputs[i]); break;
+                                    case 2: capsulestartposz = atof(capsulestartpositionInputs[i]); break;
+                                }
+                            }
+                        }
+                    }
+            GuiLabel((Rectangle){panelX + 150, 425, 100, 20}, "Pos 2:");
+                for (int i = 0; i < 3; i++) {
+                    if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 425, 50, 20}, capsuleendpositionInputs[i], 32, capsuleendpositionEdit[i])) {
+                            capsuleendpositionEdit[i] = !capsuleendpositionEdit[i]; // Toggle edit state
+                            if (!capsuleendpositionEdit[i]) { // If edit finished, update value
+                                switch (i) {
+                                    case 0: capsuleendposx = atof(capsuleendpositionInputs[i]); break;
+                                    case 1: capsuleendposy = atof(capsuleendpositionInputs[i]); break;
+                                    case 2: capsuleendposz = atof(capsuleendpositionInputs[i]); break;
+                                }
+                            }
+                        }
+                    }
+
+                GuiLabel((Rectangle){panelX + 140, 450, 100, 20}, "Radius:");
+                    if (GuiTextBox((Rectangle){panelX + 145 + (1 * 55), 450, 50, 20}, capsuleradiusInput, 32, capsuleradiusEdit)) {
+                        capsuleradiusEdit = !capsuleradiusEdit; // Toggle edit state
+                        if (!capsuleradiusEdit) { // If edit finished, update value
+                            capsulerad = atof(capsuleradiusInput);
+                            
+                        }
+                    }
+                GuiLabel((Rectangle){panelX + 150, 475, 100, 20}, "Slices:");
+                
+                    if (GuiTextBox((Rectangle){panelX + 145 + (1 * 55), 475, 50, 20}, capsuleslicesInput, 32, capsuleslicesEdit)) {
+                        capsuleslicesEdit = !capsuleslicesEdit; // Toggle edit state
+                        if (!capsuleslicesEdit) { // If edit finished, update value
+                            capsuleslices = atof(capsuleslicesInput);
+                            
+                        }
+                    }
+                GuiLabel((Rectangle){panelX + 160, 500, 100, 20}, "Ring:");
+                
+                    if (GuiTextBox((Rectangle){panelX + 145 + (1 * 55), 500, 50, 20}, capsuleringInput, 32, capsuleringEdit)) {
+                        capsuleringEdit = !capsuleringEdit; // Toggle edit state
+                        if (!capsuleringEdit) { // If edit finished, update value
+                            capsulering = atof(capsuleringInput);
+                            
+                        }
+                    }
+                GuiSlider((Rectangle){(float)(panelX + 200), 525.0f, 105.0f, 20.0f}, "Hue", NULL, &capsulehue, 0, 360);
+                Color capsulecolor = HSLToRGB(capsulehue, saturation, lightness);
+                DrawRectangle(1630, 525, 50, 20, capsulecolor);
                 // Create Capsule
-                if (GuiButton((Rectangle){ 1340, 350, 100, 50 }, "Capsule")) {
+                if (GuiButton((Rectangle){ 1340, 400, 100, 50 }, "Capsule")) {
                     DrawText("Capsule Created", 100, 200, 20, RED);
-                    AddCapsule((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector3){ 0.0f, -1.0f, 0.0f }, 0.5f, 16, 8, GREEN);
+                    AddCapsule((Vector3){ capsulestartposx, capsulestartposy, capsulestartposz }, 
+                    (Vector3){ capsuleendposx, capsuleendposy, capsuleendposz }, capsulerad, capsuleslices, capsulering, capsulecolor);
                 }
     
                 // Checkbox to enable collision for the last created Capsule
@@ -445,11 +633,40 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 //     }
                 //     DrawText("Enable Collision", 1385, 410, 20, WHITE); // Text to the right of the checkbox
                 // }
-
+                
+                //plane
+                GuiLabel((Rectangle){panelX + 130, 575, 100, 20}, "Position:");
+                    for (int i = 0; i < 3; i++) {
+                    if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 575, 50, 20}, planepositionInputs[i], 32, planepositionEdit[i])) {
+                            planepositionEdit[i] = !planepositionEdit[i]; // Toggle edit state
+                            if (!planepositionEdit[i]) { // If edit finished, update value
+                                switch (i) {
+                                    case 0: planeposx = atof(planepositionInputs[i]); break;
+                                    case 1: planeposy = atof(planepositionInputs[i]); break;
+                                    case 2: planeposz = atof(planepositionInputs[i]); break;
+                                }
+                            }
+                        }
+                    }
+                GuiLabel((Rectangle){panelX + 130, 600, 100, 20}, "Size:");
+                    for (int i = 0; i < 2; i++) {
+                    if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 600, 50, 20}, planesizeInputs[i], 32, planesizeEdit[i])) {
+                            planesizeEdit[i] = !planesizeEdit[i]; // Toggle edit state
+                            if (!planesizeEdit[i]) { // If edit finished, update value
+                                switch (i) {
+                                    case 0: planesizex = atof(planesizeInputs[i]); break;
+                                    case 1: planesizey = atof(planesizeInputs[i]); break;
+                                }
+                            }
+                        }
+                    }
+                GuiSlider((Rectangle){(float)(panelX + 200), 625.0f, 105.0f, 20.0f}, "Hue", NULL, &planehue, 0, 360);
+                Color planecolor = HSLToRGB(planehue, saturation, lightness);
+                DrawRectangle(1630, 625, 50, 20, planecolor);
                 // Create Plane
-                if (GuiButton((Rectangle){ 1340, 450, 100, 50 }, "Plane")) {
+                if (GuiButton((Rectangle){ 1340, 575, 100, 50 }, "Plane")) {
                     DrawText("Plane Created", 100, 200, 20, RED);
-                    AddPlane((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector2){ 3.0f, 3.0f }, DARKGRAY);
+                    AddPlane((Vector3){ planeposx, planeposy, planeposz }, (Vector2){ planesizex, planesizey }, planecolor);
                 }
     
                 // Checkbox to enable collision for the last created Plane
