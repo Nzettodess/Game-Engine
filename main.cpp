@@ -166,17 +166,64 @@ typedef struct {
     bool collisionActive;  // Collision activation flag
 } Plane;
 
+//global data 
+float saturation = 1.0f;      // Saturation: 0-1
+float lightness = 0.5f;       // Lightness: 0-1
+
+//cubedata
 Cube* cubes = NULL;
 int cubeCount = 0;
+float cubeposx = 0.0;
+float cubeposy = 1.0;
+float cubeposz = 0.0;
+float cubesizex = 2.0;
+float cubesizey = 2.0;
+float cubesizez = 2.0;
+float cubehue = 150.0;
+
+// Sphere
 Sphere* spheres = NULL;
 int sphereCount = 0;
+
+//cylinder
 Cylinder* cylinders = NULL;
 int cylinderCount = 0;
+
+//capsule
 Capsule* capsules = NULL;
 int capsuleCount = 0;
+
+//plane
 Plane* planes = NULL;
 int planeCount = 0;
+float planeposx = 0.0;
+float planeposy = 1.0;
+float planeposz = 0.0;
+float planesizex = 2.0;
+float planesizey = 2.0;
+float planesizez = 2.0;
+float planehue = 150.0;
 
+Color HSLToRGB(float hue, float saturation, float lightness) {
+    float c = (1 - fabs(2 * lightness - 1)) * saturation;
+    float x = c * (1 - fabs(fmod(hue / 60.0, 2) - 1));
+    float m = lightness - c / 2;
+
+    float r, g, b;
+    if (hue >= 0 && hue < 60)      { r = c; g = x; b = 0; }
+    else if (hue >= 60 && hue < 120)  { r = x; g = c; b = 0; }
+    else if (hue >= 120 && hue < 180) { r = 0; g = c; b = x; }
+    else if (hue >= 180 && hue < 240) { r = 0; g = x; b = c; }
+    else if (hue >= 240 && hue < 300) { r = x; g = 0; b = c; }
+    else                              { r = c; g = 0; b = x; }
+
+    return (Color){
+        (unsigned char)((r + m) * 255),
+        (unsigned char)((g + m) * 255),
+        (unsigned char)((b + m) * 255),
+        255
+    };
+}
 // Function to add a cube
 void AddCube(Vector3 position, Vector3 size, Color color) {
     cubeCount++;
@@ -304,85 +351,116 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 DrawText("WASD To Move, QE To Up/Down,", panelX + 10, 300, 20, WHITE);
                 DrawText("MouseWheel To Zoom In/Out", panelX + 10, 330, 20, WHITE);
                 DrawText("Hold shift and move Mouse to pan", panelX + 10, 360, 20, WHITE);
-                DrawText("Zero to Exit CAMERA Mode", panelX + 10, 390, 20, WHITE);
+                DrawText("F1 to Exit CAMERA Mode", panelX + 10, 390, 20, WHITE);
 
             } break;
             case SHAPE_CREATETION:
             {
-                DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
-                
+                //DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
+                GuiPanel((Rectangle){panelX + 10, 10, 380, 750}, "Shape Creation Mode");
+
+                    GuiLabel((Rectangle){panelX + 130, 50, 100, 20}, "Position:");
+                    for (int i = 0; i < 3; i++) {
+                        if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 50, 50, 20}, positionInputs[i], 32, positionEdit[i])) {
+                            positionEdit[i] = !positionEdit[i]; // Toggle edit state
+                            if (!positionEdit[i]) { // If edit finished, update value
+                                switch (i) {
+                                    case 0: cubeposx = atof(positionInputs[i]); break;
+                                    case 1: cubeposy = atof(positionInputs[i]); break;
+                                    case 2: cubeposz = atof(positionInputs[i]); break;
+                                }
+                            }
+                        }
+                    }
+                    GuiLabel((Rectangle){panelX + 160, 75, 100, 20}, "Size:");
+                    for (int i = 0; i < 3; i++) {
+                        if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 75, 50, 20}, positionInputs[i], 32, positionEdit[i])) {
+                            positionEdit[i] = !positionEdit[i]; // Toggle edit state
+                            if (!positionEdit[i]) { // If edit finished, update value
+                                switch (i) {
+                                    case 0: cubesizex = atof(positionInputs[i]); break;
+                                    case 1: cubesizey = atof(positionInputs[i]); break;
+                                    case 2: cubesizez = atof(positionInputs[i]); break;
+                                }
+                            }
+                        }
+                    }
+                    GuiSlider((Rectangle){(float)(panelX + 200), 100.0f, 105.0f, 20.0f}, "Hue", NULL, &cubehue, 0, 360);
+                    Color cubecolor = HSLToRGB(cubehue, saturation, lightness);
+                    DrawRectangle(1630, 100, 50, 20, cubecolor);
 
                  // Create Cube
-                if (GuiButton((Rectangle){ 1345, 50, 350, 50 }, "Cube")) {
-                    DrawText("Cube Created", 100, 200, 20, RED);
-                    AddCube((Vector3){ 0.0f, 1.0f, 0.0f }, {2.0f, 2.0f, 2.0f}, BLUE);
+                if (GuiButton((Rectangle){ 1340, 50, 100, 50 }, "Cube")) {
+                    // DrawText("Cube Created", 100, 200, 20, RED);
+                    AddCube((Vector3){ cubeposx, cubeposy, cubeposz }, {cubesizex, cubesizey, cubesizez}, cubecolor);
                 }
-    
+                    
+
                 // Checkbox to enable collision for the last created Cube
-                if (cubeCount > 0) {
-                    if (GuiCheckBox((Rectangle){ 1345, 110, 30, 30 }, " ", &cubes[cubeCount - 1].collisionActive)) {
-                        // Toggle collisionActive for the last created cube
-                    }
-                    DrawText("Enable Collision", 1385, 110, 20, WHITE); // Text to the right of the checkbox
-                }
+                // if (cubeCount > 0) {
+                //     if (GuiCheckBox((Rectangle){ 1345, 110, 30, 30 }, " ", &cubes[cubeCount - 1].collisionActive)) {
+                //         // Toggle collisionActive for the last created cube
+                //     }
+                //     DrawText("Enable Collision", 1385, 110, 20, WHITE); // Text to the right of the checkbox
+                // }
     
                 // Create Sphere
-                if (GuiButton((Rectangle){ 1345, 150, 350, 50 }, "Sphere")) {
+                if (GuiButton((Rectangle){ 1340, 150, 100, 50 }, "Sphere")) {
                     DrawText("Sphere Created", 100, 200, 20, RED);
                     AddSphere((Vector3){ 0.0f, 1.0f, 0.0f }, 1.5f, RED);
                 }
     
                 // Checkbox to enable collision for the last created Sphere
-                if (sphereCount > 0) {
-                    if (GuiCheckBox((Rectangle){ 1345, 210, 30, 30 }, " ", &spheres[sphereCount - 1].collisionActive)) {
-                        // Toggle collisionActive for the last created sphere
-                    }
-                    DrawText("Enable Collision", 1385, 210, 20, WHITE); // Text to the right of the checkbox
-                }
+                // if (sphereCount > 0) {
+                //     if (GuiCheckBox((Rectangle){ 1345, 210, 30, 30 }, " ", &spheres[sphereCount - 1].collisionActive)) {
+                //         // Toggle collisionActive for the last created sphere
+                //     }
+                //     DrawText("Enable Collision", 1385, 210, 20, WHITE); // Text to the right of the checkbox
+                // }
 
                 // Create Cylinder
-                if (GuiButton((Rectangle){ 1345, 250, 350, 50 }, "Cylinder")) {
+                if (GuiButton((Rectangle){ 1340, 250, 100, 50 }, "Cylinder")) {
                     DrawText("Cylinder Created", 100, 200, 20, RED);
                     AddCylinder((Vector3){ 0.0f, 1.0f, 0.0f }, 1.0f, 1.0f, 3.0f, 16, GREEN);
                 }
     
                 // Checkbox to enable collision for the last created Cylinder
-                if (cylinderCount > 0) {
-                    if (GuiCheckBox((Rectangle){ 1345, 310, 30, 30 }, " ", &cylinders[cylinderCount - 1].collisionActive)) {
-                        // Toggle collisionActive for the last created cylinder
-                    }
-                    DrawText("Enable Collision", 1385, 310, 20, WHITE); // Text to the right of the checkbox
-                }
+                // if (cylinderCount > 0) {
+                //     if (GuiCheckBox((Rectangle){ 1345, 310, 30, 30 }, " ", &cylinders[cylinderCount - 1].collisionActive)) {
+                //         // Toggle collisionActive for the last created cylinder
+                //     }
+                //     DrawText("Enable Collision", 1385, 310, 20, WHITE); // Text to the right of the checkbox
+                // }
     
                 // Create Capsule
-                if (GuiButton((Rectangle){ 1345, 350, 350, 50 }, "Capsule")) {
+                if (GuiButton((Rectangle){ 1340, 350, 100, 50 }, "Capsule")) {
                     DrawText("Capsule Created", 100, 200, 20, RED);
                     AddCapsule((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector3){ 0.0f, -1.0f, 0.0f }, 0.5f, 16, 8, GREEN);
                 }
     
                 // Checkbox to enable collision for the last created Capsule
-                if (capsuleCount > 0) {
-                    if (GuiCheckBox((Rectangle){ 1345, 410, 30, 30 }, " ", &capsules[capsuleCount - 1].collisionActive)) {
-                        // Toggle collisionActive for the last created capsule
-                    }
-                    DrawText("Enable Collision", 1385, 410, 20, WHITE); // Text to the right of the checkbox
-                }
+                // if (capsuleCount > 0) {
+                //     if (GuiCheckBox((Rectangle){ 1345, 410, 30, 30 }, " ", &capsules[capsuleCount - 1].collisionActive)) {
+                //         // Toggle collisionActive for the last created capsule
+                //     }
+                //     DrawText("Enable Collision", 1385, 410, 20, WHITE); // Text to the right of the checkbox
+                // }
 
                 // Create Plane
-                if (GuiButton((Rectangle){ 1345, 450, 350, 50 }, "Plane")) {
+                if (GuiButton((Rectangle){ 1340, 450, 100, 50 }, "Plane")) {
                     DrawText("Plane Created", 100, 200, 20, RED);
                     AddPlane((Vector3){ 0.0f, 1.0f, 0.0f }, (Vector2){ 3.0f, 3.0f }, DARKGRAY);
                 }
     
                 // Checkbox to enable collision for the last created Plane
-                if (planeCount > 0) {
-                    if (GuiCheckBox((Rectangle){ 1345, 510, 30, 30 }, " ", &planes[planeCount - 1].collisionActive)) {
-                        // Toggle collisionActive for the last created plane
-                    }
-                    DrawText("Enable Collision", 1385, 510, 20, WHITE); // Text to the right of the checkbox
-                }
+                // if (planeCount > 0) {
+                //     if (GuiCheckBox((Rectangle){ 1345, 510, 30, 30 }, " ", &planes[planeCount - 1].collisionActive)) {
+                //         // Toggle collisionActive for the last created plane
+                //     }
+                //     DrawText("Enable Collision", 1385, 510, 20, WHITE); // Text to the right of the checkbox
+                // }
 
-                DrawText("Zero to Exit SHAPE CREATION Mode", panelX + 10, 550, 20, WHITE);
+                DrawText("F1 to Exit SHAPE CREATION Mode", panelX + 10, screenHeight - 30, 20, WHITE);
             } break;
             case AUDIO:
             {
@@ -558,7 +636,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                     }
                 }
         
-                DrawText("Zero to Exit Audio Mode", panelX + 10, screenHeight - 30, 20, WHITE);
+                DrawText("F1 to Exit Audio Mode", panelX + 10, screenHeight - 30, 20, WHITE);
 
                 if(isfileunsupported){
 
@@ -579,12 +657,12 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
             case COLLISION:
             {
                 DrawText("Collision Mode", panelX + 10, 10, 20, WHITE);
-                DrawText("Zero to Exit Collision Mode", panelX + 10, screenHeight - 30, 20, WHITE);
+                DrawText("F1 to Exit Collision Mode", panelX + 10, screenHeight - 30, 20, WHITE);
             } break;
             case ASSET_MANAGEMENT:
             {
                 DrawText("Asset Management Mode", panelX + 10, 10, 20, WHITE);
-                DrawText("Zero to Exit Asset Management Mode", panelX + 10, screenHeight - 30, 20, WHITE);
+                DrawText("F1 to Exit Asset Management Mode", panelX + 10, screenHeight - 30, 20, WHITE);
 
                 if (selectedModelIndex != -1) {
             ModelData *selectedModel = &models[selectedModelIndex];
@@ -836,7 +914,7 @@ int main()
                 }
 
                 //Exit Mode
-                if (IsKeyPressed(KEY_ZERO)){
+                if (IsKeyPressed(KEY_F1)){
                      currentMode = NONE;
                 }
 
@@ -845,7 +923,7 @@ int main()
             {
 
                 //Exit Mode
-                if (IsKeyPressed(KEY_ZERO)){
+                if (IsKeyPressed(KEY_F1)){
                      currentMode = NONE;
                 }
             } break;
@@ -947,16 +1025,15 @@ int main()
                 }
 
                 //Exit Mode
-                if (IsKeyPressed(KEY_ZERO)){
+                if (IsKeyPressed(KEY_F1)){
                      currentMode = NONE;
                 }
 
             } break;
             case COLLISION:
             {
-
                 //Exit Mode
-                if (IsKeyPressed(KEY_ZERO)){
+                if (IsKeyPressed(KEY_F1)){
                      currentMode = NONE;
                 }
             } break;
@@ -1084,7 +1161,7 @@ int main()
         }
 
                 //Exit Mode
-                if (IsKeyPressed(KEY_ZERO)){
+                if (IsKeyPressed(KEY_F1)){
                      currentMode = NONE;
                 }
             } break;
@@ -1093,7 +1170,7 @@ int main()
         //----------------------------------------------------------------------------------
 
         //GUI Updater
-        // Update FOV and projection mode based on GUI
+        //Update FOV and projection mode based on GUI
         camera.fovy = fov;
         camera.projection = projection;
 
@@ -1105,45 +1182,45 @@ int main()
         BeginMode3D(camera);
 
         // Draw shapes based on the state set by button clicks
-for (int i = 0; i < cubeCount; i++) {
-    DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
-    if (cubes[i].collisionActive) {
-        // Draw a collision box around the cube (for simplicity, we use a wireframe cube here)
-        DrawCubeWires(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, DARKGRAY);
-    }
-}
+        for (int i = 0; i < cubeCount; i++) {
+            DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
+            if (cubes[i].collisionActive) {
+                // Draw a collision box around the cube (for simplicity, we use a wireframe cube here)
+                DrawCubeWires(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, DARKGRAY);
+            }
+        }
 
-for (int i = 0; i < sphereCount; i++) {
-    DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
-    if (spheres[i].collisionActive) {
-        // Draw a collision sphere (wireframe)
-        DrawSphereWires(spheres[i].position, spheres[i].radius, 16, 16, DARKGRAY);
-    }
-}
+        for (int i = 0; i < sphereCount; i++) {
+            DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
+            if (spheres[i].collisionActive) {
+                // Draw a collision sphere (wireframe)
+                DrawSphereWires(spheres[i].position, spheres[i].radius, 16, 16, DARKGRAY);
+            }
+        }
 
-for (int i = 0; i < cylinderCount; i++) {
-    DrawCylinder(cylinders[i].position, cylinders[i].radiusTop, cylinders[i].radiusBottom, cylinders[i].height, cylinders[i].slices, cylinders[i].color);
-    if (cylinders[i].collisionActive) {
-        // Draw a collision wireframe cylinder
-        DrawCylinderWires(cylinders[i].position, cylinders[i].radiusTop, cylinders[i].radiusBottom, cylinders[i].height, cylinders[i].slices, DARKGRAY);
-    }
-}
+        for (int i = 0; i < cylinderCount; i++) {
+            DrawCylinder(cylinders[i].position, cylinders[i].radiusTop, cylinders[i].radiusBottom, cylinders[i].height, cylinders[i].slices, cylinders[i].color);
+            if (cylinders[i].collisionActive) {
+                // Draw a collision wireframe cylinder
+                DrawCylinderWires(cylinders[i].position, cylinders[i].radiusTop, cylinders[i].radiusBottom, cylinders[i].height, cylinders[i].slices, DARKGRAY);
+            }
+        }
 
-for (int i = 0; i < capsuleCount; i++) {
-    DrawCapsule(capsules[i].startPos, capsules[i].endPos, capsules[i].radius, capsules[i].slices, capsules[i].rings, capsules[i].color);
-    if (capsules[i].collisionActive) {
-        // Draw a collision wireframe capsule
-        DrawCapsuleWires(capsules[i].startPos, capsules[i].endPos, capsules[i].radius, capsules[i].slices, capsules[i].rings, DARKGRAY);
-    }
-}
+        for (int i = 0; i < capsuleCount; i++) {
+            DrawCapsule(capsules[i].startPos, capsules[i].endPos, capsules[i].radius, capsules[i].slices, capsules[i].rings, capsules[i].color);
+            if (capsules[i].collisionActive) {
+                // Draw a collision wireframe capsule
+                DrawCapsuleWires(capsules[i].startPos, capsules[i].endPos, capsules[i].radius, capsules[i].slices, capsules[i].rings, DARKGRAY);
+            }
+        }
 
-for (int i = 0; i < planeCount; i++) {
-    DrawPlane(planes[i].position, planes[i].size, planes[i].color);
-    if (planes[i].collisionActive) {
-        // Draw a collision wireframe plane (we'll use a large box for simplicity)
-        DrawCubeWires(planes[i].position, planes[i].size.x, 0.1f, planes[i].size.y, DARKGRAY);
-    }
-}
+        for (int i = 0; i < planeCount; i++) {
+            DrawPlane(planes[i].position, planes[i].size, planes[i].color);
+            if (planes[i].collisionActive) {
+                // Draw a collision wireframe plane (we'll use a large box for simplicity)
+                DrawCubeWires(planes[i].position, planes[i].size.x, 0.1f, planes[i].size.y, DARKGRAY);
+            }
+        }
 
         for (int i = 0; i < modelCount; i++) {
             DrawModel(models[i].model, models[i].position, 1.0f, WHITE);
@@ -1168,8 +1245,6 @@ for (int i = 0; i < planeCount; i++) {
                     &fov, &projection, 
                     soundFiles, musicFiles,
                     masterVolume, masterSoundVolume, masterMusicVolume);
-        // Draw the blank canvas (just a white background for now)
-        // DrawText("Hold RMB to Enter CAMERA Mode", 250, 20, 20, DARKGRAY);
 
         //Remove Sound and Music main logic
             if (removedSound && soundToRemove >= 0) {
@@ -1237,7 +1312,6 @@ void DrawAxisArrows(Vector3 position, float scale) {
     DrawCubeV(zStart, zSize, BLUE); // Z-axis
     
 }
-
 // Function to detect collision with axis arrows
 AxisType GetAxisCollision(Vector3 position, Vector3 rayOrigin, Vector3 rayDirection, float scale) {
     Ray ray = {rayOrigin, rayDirection};

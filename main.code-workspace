@@ -54,7 +54,9 @@
 			"regex": "cpp",
 			"xlocale": "cpp",
 			"chrono": "cpp",
-			"functional": "cpp"
+			"functional": "cpp",
+			"queue": "cpp",
+			"random": "cpp"
 		},
 		"vcpkg.target.defaultTriplet": "arm-neon-android",
 		"vcpkg.target.hostTriplet": "arm-neon-android",
