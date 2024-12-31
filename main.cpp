@@ -129,14 +129,16 @@ typedef struct {
     Vector3 position;
     Vector3 size;
     Color color;
-    bool collisionActive;  // Collision activation flag
+    bool collisionActive;
+    BoundingBox boundingBox; // Add bounding box here
 } Cube;
 
 typedef struct {
     Vector3 position;
     float radius;
     Color color;
-    bool collisionActive;  // Collision activation flag
+    bool collisionActive;
+    BoundingBox boundingBox; // Add bounding box here
 } Sphere;
 
 typedef struct {
@@ -146,25 +148,29 @@ typedef struct {
     float height;
     int slices;
     Color color;
-    bool collisionActive;  // Collision activation flag
+    bool collisionActive;
+    BoundingBox boundingBox; // Add bounding box here
 } Cylinder;
 
 typedef struct {
-    Vector3 startPos;
-    Vector3 endPos;
-    float radius;
-    int slices;
-    int rings;
-    Color color;
-    bool collisionActive;  // Collision activation flag
+    Vector3 startPos;        // Starting position of the capsule
+    Vector3 endPos;          // Ending position of the capsule
+    float radius;            // Radius of the capsule
+    int slices;              // Number of slices (longitudinal divisions)
+    int rings;               // Number of rings (latitudinal divisions)
+    Color color;             // Color of the capsule
+    bool collisionActive;    // Whether collision is enabled
+    BoundingBox boundingBox; // Bounding box for the capsule
 } Capsule;
 
 typedef struct {
-    Vector3 position;
-    Vector2 size;
-    Color color;
-    bool collisionActive;  // Collision activation flag
+    Vector3 position;        // Center position of the plane
+    Vector2 size;            // Size of the plane (width and length)
+    Color color;             // Color of the plane
+    bool collisionActive;    // Whether collision is enabled
+    BoundingBox boundingBox; // Bounding box for the plane
 } Plane;
+
 
 //global data 
 float saturation = 1.0f;      // Saturation: 0-1
@@ -277,35 +283,190 @@ Color HSLToRGB(float hue, float saturation, float lightness) {
         255
     };
 }
+
+//Function to draw boundingbox
+BoundingBox ComputeBoundingBoxCube(Vector3 position, Vector3 size) {
+    Vector3 min = Vector3Subtract(position, Vector3Scale(size, 0.5f)); // Calculate min corner
+    Vector3 max = Vector3Add(position, Vector3Scale(size, 0.5f));      // Calculate max corner
+    return (BoundingBox){ min, max };
+}
+
+BoundingBox ComputeBoundingBoxSphere(Vector3 position, float radius) {
+    Vector3 min = (Vector3){ position.x - radius, position.y - radius, position.z - radius };
+    Vector3 max = (Vector3){ position.x + radius, position.y + radius, position.z + radius };
+    return (BoundingBox){ min, max };
+}
+
+BoundingBox ComputeBoundingBoxCylinder(Vector3 position, float radiusBottom, float radiusTop, float height) {
+    // Use the largest radius between the top and bottom to create the bounding box
+    float maxRadius = fmaxf(radiusBottom, radiusTop);
+
+    Vector3 min = {
+        position.x - maxRadius,                   // Min X
+        position.y,                               // Min Y (base of cylinder)
+        position.z - maxRadius                    // Min Z
+    };
+    Vector3 max = {
+        position.x + maxRadius,                   // Max X
+        position.y + height,                      // Max Y (top of cylinder)
+        position.z + maxRadius                    // Max Z
+    };
+
+    return (BoundingBox){ min, max };
+}
+
+BoundingBox ComputeBoundingBoxCapsule(Vector3 startPos, Vector3 endPos, float radius) {
+    // Calculate the minimum and maximum points of the capsule
+    Vector3 min = {
+        fminf(startPos.x, endPos.x) - radius,  // Min X
+        fminf(startPos.y, endPos.y) - radius,  // Min Y
+        fminf(startPos.z, endPos.z) - radius   // Min Z
+    };
+
+    Vector3 max = {
+        fmaxf(startPos.x, endPos.x) + radius,  // Max X
+        fmaxf(startPos.y, endPos.y) + radius,  // Max Y
+        fmaxf(startPos.z, endPos.z) + radius   // Max Z
+    };
+
+    return (BoundingBox){ min, max };
+}
+
+BoundingBox ComputeBoundingBoxPlane(Vector3 position, Vector2 size) {
+    Vector3 min = {
+        position.x - size.x / 2.0f,  // Min X
+        position.y,                  // Min Y (planes are flat, so height is constant)
+        position.z - size.y / 2.0f   // Min Z
+    };
+
+    Vector3 max = {
+        position.x + size.x / 2.0f,  // Max X
+        position.y,                  // Max Y (planes are flat, so height is constant)
+        position.z + size.y / 2.0f   // Max Z
+    };
+
+    return (BoundingBox){ min, max };
+}
+
 // Function to add a cube
 void AddCube(Vector3 position, Vector3 size, Color color) {
     cubeCount++;
     cubes = (Cube*)realloc(cubes, cubeCount * sizeof(Cube));
-    cubes[cubeCount - 1] = (Cube){ position, size, color, false }; // Default collisionActive to false
+    cubes[cubeCount - 1] = (Cube){ position, size, color, false };
+    cubes[cubeCount - 1].boundingBox = ComputeBoundingBoxCube(position, size); // Compute bounding box
 }
 
 void AddSphere(Vector3 position, float radius, Color color) {
     sphereCount++;
     spheres = (Sphere*)realloc(spheres, sphereCount * sizeof(Sphere));
-    spheres[sphereCount - 1] = (Sphere){ position, radius, color, false }; // Default collisionActive to false
+    spheres[sphereCount - 1] = (Sphere){ position, radius, color, false };
+    spheres[sphereCount - 1].boundingBox = ComputeBoundingBoxSphere(position, radius); // Compute bounding box
 }
 
 void AddCylinder(Vector3 position, float radiusTop, float radiusBottom, float height, int slices, Color color) {
     cylinderCount++;
     cylinders = (Cylinder*)realloc(cylinders, cylinderCount * sizeof(Cylinder));
-    cylinders[cylinderCount - 1] = (Cylinder){ position, radiusTop, radiusBottom, height, slices, color, false }; // Default collisionActive to false
+
+    // Initialize the cylinder
+    cylinders[cylinderCount - 1] = (Cylinder){
+        position,
+        radiusTop,
+        radiusBottom,
+        height,
+        slices,
+        color,
+        false, // collisionActive is initially false
+    };
+
+    // Compute and store the bounding box
+    cylinders[cylinderCount - 1].boundingBox = ComputeBoundingBoxCylinder(position, radiusBottom, radiusTop, height);
 }
 
 void AddCapsule(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color color) {
     capsuleCount++;
     capsules = (Capsule*)realloc(capsules, capsuleCount * sizeof(Capsule));
-    capsules[capsuleCount - 1] = (Capsule){ startPos, endPos, radius, slices, rings, color, false }; // Default collisionActive to false
+
+    // Initialize the capsule
+    capsules[capsuleCount - 1] = (Capsule){
+        startPos,
+        endPos,
+        radius,
+        slices,
+        rings,
+        color,
+        false, // collisionActive is initially false
+    };
+
+    // Compute and store the bounding box
+    capsules[capsuleCount - 1].boundingBox = ComputeBoundingBoxCapsule(startPos, endPos, radius);
 }
 
 void AddPlane(Vector3 position, Vector2 size, Color color) {
     planeCount++;
     planes = (Plane*)realloc(planes, planeCount * sizeof(Plane));
-    planes[planeCount - 1] = (Plane){ position, size, color, false }; // Default collisionActive to false
+
+    // Initialize the plane
+    planes[planeCount - 1] = (Plane){
+        position,
+        size,
+        color,
+        false, // collisionActive is initially false
+    };
+
+    // Compute and store the bounding box
+    planes[planeCount - 1].boundingBox = ComputeBoundingBoxPlane(position, size);
+}
+
+//Update boundingbox
+void UpdateCubeBoundingBox(Cube* cube) {
+    cube->boundingBox = ComputeBoundingBoxCube(cube->position, cube->size);
+}
+
+void UpdateSphereBoundingBox(Sphere* sphere) {
+    sphere->boundingBox = ComputeBoundingBoxSphere(sphere->position, sphere->radius);
+}
+
+void UpdateCylinderBoundingBox(Cylinder* cylinder) {
+    float maxRadius = fmax(cylinder->radiusTop, cylinder->radiusBottom); // Take the larger of the two radii
+    Vector3 min = {
+        cylinder->position.x - maxRadius,
+        cylinder->position.y - cylinder->height / 2.0f,
+        cylinder->position.z - maxRadius
+    };
+    Vector3 max = {
+        cylinder->position.x + maxRadius,
+        cylinder->position.y + cylinder->height / 2.0f,
+        cylinder->position.z + maxRadius
+    };
+    cylinder->boundingBox = (BoundingBox){ min, max };
+}
+
+void UpdateCapsuleBoundingBox(Capsule* capsule) {
+    Vector3 min = {
+        fmin(capsule->startPos.x, capsule->endPos.x) - capsule->radius,
+        fmin(capsule->startPos.y, capsule->endPos.y) - capsule->radius,
+        fmin(capsule->startPos.z, capsule->endPos.z) - capsule->radius
+    };
+    Vector3 max = {
+        fmax(capsule->startPos.x, capsule->endPos.x) + capsule->radius,
+        fmax(capsule->startPos.y, capsule->endPos.y) + capsule->radius,
+        fmax(capsule->startPos.z, capsule->endPos.z) + capsule->radius
+    };
+    capsule->boundingBox = (BoundingBox){ min, max };
+}
+
+void UpdatePlaneBoundingBox(Plane* plane) {
+    Vector3 min = {
+        plane->position.x - plane->size.x / 2.0f,
+        plane->position.y,
+        plane->position.z - plane->size.y / 2.0f
+    };
+    Vector3 max = {
+        plane->position.x + plane->size.x / 2.0f,
+        plane->position.y,
+        plane->position.z + plane->size.y / 2.0f
+    };
+    plane->boundingBox = (BoundingBox){ min, max };
 }
 
 
@@ -447,6 +608,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 if (GuiButton((Rectangle){ 1340, 50, 100, 50 }, "Cube")) {
                     // DrawText("Cube Created", 100, 200, 20, RED);
                     AddCube((Vector3){ cubeposx, cubeposy, cubeposz }, {cubesizex, cubesizey, cubesizez}, cubecolor);
+                    UpdateCubeBoundingBox(&cubes[cubeCount - 1]);
                 }
                     
 
@@ -489,6 +651,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 // Create Sphere
                 if (GuiButton((Rectangle){ 1340, 150, 100, 50 }, "Sphere")) {
                     AddSphere((Vector3){ sphereposx, sphereposy, sphereposz }, sphererad, spherecolor);
+                    UpdateSphereBoundingBox(&spheres[sphereCount - 1]);
                 }
     
                 // Checkbox to enable collision for the last created Sphere
@@ -552,6 +715,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 if (GuiButton((Rectangle){ 1340, 250, 100, 50 }, "Cylinder")) {
                     AddCylinder((Vector3){cylinderposx, cylinderposy, cylinderposz }, 
                     cylinderradtop, cylinderradbottom, cylinderheight, cylinderslices, cylindercolor);
+                    UpdateCylinderBoundingBox(&cylinders[cylinderCount - 1]);
                 }
                 
                 // Checkbox to enable collision for the last created Cylinder
@@ -624,6 +788,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                     DrawText("Capsule Created", 100, 200, 20, RED);
                     AddCapsule((Vector3){ capsulestartposx, capsulestartposy, capsulestartposz }, 
                     (Vector3){ capsuleendposx, capsuleendposy, capsuleendposz }, capsulerad, capsuleslices, capsulering, capsulecolor);
+                    UpdateCapsuleBoundingBox(&capsules[capsuleCount - 1]);
                 }
     
                 // Checkbox to enable collision for the last created Capsule
@@ -667,6 +832,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 if (GuiButton((Rectangle){ 1340, 575, 100, 50 }, "Plane")) {
                     DrawText("Plane Created", 100, 200, 20, RED);
                     AddPlane((Vector3){ planeposx, planeposy, planeposz }, (Vector2){ planesizex, planesizey }, planecolor);
+                    UpdatePlaneBoundingBox(&planes[planeCount - 1]);
                 }
     
                 // Checkbox to enable collision for the last created Plane
@@ -1460,42 +1626,60 @@ int main()
 
         // Draw shapes based on the state set by button clicks
         for (int i = 0; i < cubeCount; i++) {
-            DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
             if (cubes[i].collisionActive) {
-                // Draw a collision box around the cube (for simplicity, we use a wireframe cube here)
-                DrawCubeWires(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, DARKGRAY);
+                DrawBoundingBox(cubes[i].boundingBox, RED); // Use stored bounding box
+            } else {
+                DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
             }
         }
 
         for (int i = 0; i < sphereCount; i++) {
-            DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
             if (spheres[i].collisionActive) {
-                // Draw a collision sphere (wireframe)
-                DrawSphereWires(spheres[i].position, spheres[i].radius, 16, 16, DARKGRAY);
+                DrawBoundingBox(spheres[i].boundingBox, RED); // Use stored bounding box
+            } else {
+                DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
             }
         }
 
         for (int i = 0; i < cylinderCount; i++) {
-            DrawCylinder(cylinders[i].position, cylinders[i].radiusTop, cylinders[i].radiusBottom, cylinders[i].height, cylinders[i].slices, cylinders[i].color);
             if (cylinders[i].collisionActive) {
-                // Draw a collision wireframe cylinder
-                DrawCylinderWires(cylinders[i].position, cylinders[i].radiusTop, cylinders[i].radiusBottom, cylinders[i].height, cylinders[i].slices, DARKGRAY);
+                DrawBoundingBox(cylinders[i].boundingBox, RED); // Highlight the bounding box
+            } else {
+                DrawCylinder(
+                    cylinders[i].position,
+                    cylinders[i].radiusTop,
+                    cylinders[i].radiusBottom,
+                    cylinders[i].height,
+                    cylinders[i].slices,
+                    cylinders[i].color
+                );
             }
         }
 
         for (int i = 0; i < capsuleCount; i++) {
-            DrawCapsule(capsules[i].startPos, capsules[i].endPos, capsules[i].radius, capsules[i].slices, capsules[i].rings, capsules[i].color);
             if (capsules[i].collisionActive) {
-                // Draw a collision wireframe capsule
-                DrawCapsuleWires(capsules[i].startPos, capsules[i].endPos, capsules[i].radius, capsules[i].slices, capsules[i].rings, DARKGRAY);
+                DrawBoundingBox(capsules[i].boundingBox, RED); // Highlight the bounding box
+            } else {
+                DrawCapsule(
+                    capsules[i].startPos,
+                    capsules[i].endPos,
+                    capsules[i].radius,
+                    capsules[i].slices,
+                    capsules[i].rings,
+                    capsules[i].color
+                );
             }
         }
 
         for (int i = 0; i < planeCount; i++) {
-            DrawPlane(planes[i].position, planes[i].size, planes[i].color);
             if (planes[i].collisionActive) {
-                // Draw a collision wireframe plane (we'll use a large box for simplicity)
-                DrawCubeWires(planes[i].position, planes[i].size.x, 0.1f, planes[i].size.y, DARKGRAY);
+                DrawBoundingBox(planes[i].boundingBox, RED); // Highlight the bounding box
+            } else {
+                DrawPlane(
+                    planes[i].position,
+                    planes[i].size,
+                    planes[i].color
+                );
             }
         }
 
