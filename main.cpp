@@ -171,6 +171,12 @@ typedef struct {
     BoundingBox boundingBox; // Bounding box for the plane
 } Plane;
 
+// Initialize cube collision activation state
+static bool cubeCollisionActive = false; // Default: collision is disabled
+static bool sphereCollisionActive = false; // Default: collision is disabled
+static bool cylinderCollisionActive = false; // Default: collision is disabled
+static bool capsuleCollisionActive = false; // Default: collision is disabled
+static bool planeCollisionActive = false; // Default: collision is disabled
 
 //global data 
 float saturation = 1.0f;      // Saturation: 0-1
@@ -298,18 +304,19 @@ BoundingBox ComputeBoundingBoxSphere(Vector3 position, float radius) {
 }
 
 BoundingBox ComputeBoundingBoxCylinder(Vector3 position, float radiusBottom, float radiusTop, float height) {
-    // Use the largest radius between the top and bottom to create the bounding box
+    // Use the largest radius between the top and bottom
     float maxRadius = fmaxf(radiusBottom, radiusTop);
 
+    // Adjust Y to align the bottom of the bounding box with the cylinder's position
     Vector3 min = {
-        position.x - maxRadius,                   // Min X
-        position.y,                               // Min Y (base of cylinder)
-        position.z - maxRadius                    // Min Z
+        position.x - maxRadius,                 // Min X
+        position.y - height / 2.0f,            // Min Y (aligns bottom of cylinder to bounding box)
+        position.z - maxRadius                 // Min Z
     };
     Vector3 max = {
-        position.x + maxRadius,                   // Max X
-        position.y + height,                      // Max Y (top of cylinder)
-        position.z + maxRadius                    // Max Z
+        position.x + maxRadius,                 // Max X
+        position.y + height / 2.0f,             // Max Y (aligns top of cylinder to bounding box)
+        position.z + maxRadius                  // Max Z
     };
 
     return (BoundingBox){ min, max };
@@ -364,10 +371,14 @@ void AddSphere(Vector3 position, float radius, Color color) {
 }
 
 void AddCylinder(Vector3 position, float radiusTop, float radiusBottom, float height, int slices, Color color) {
+    // Increment the cylinder count and reallocate memory for the array
     cylinderCount++;
     cylinders = (Cylinder*)realloc(cylinders, cylinderCount * sizeof(Cylinder));
 
-    // Initialize the cylinder
+    // Compute the bounding box first
+    BoundingBox boundingBox = ComputeBoundingBoxCylinder(position, radiusBottom, radiusTop, height);
+
+    // Initialize the new cylinder with its parameters
     cylinders[cylinderCount - 1] = (Cylinder){
         position,
         radiusTop,
@@ -375,11 +386,9 @@ void AddCylinder(Vector3 position, float radiusTop, float radiusBottom, float he
         height,
         slices,
         color,
-        false, // collisionActive is initially false
+        false,        // collisionActive is initially false
+        boundingBox   // Assign the computed bounding box directly
     };
-
-    // Compute and store the bounding box
-    cylinders[cylinderCount - 1].boundingBox = ComputeBoundingBoxCylinder(position, radiusBottom, radiusTop, height);
 }
 
 void AddCapsule(Vector3 startPos, Vector3 endPos, float radius, int slices, int rings, Color color) {
@@ -427,17 +436,21 @@ void UpdateSphereBoundingBox(Sphere* sphere) {
 }
 
 void UpdateCylinderBoundingBox(Cylinder* cylinder) {
-    float maxRadius = fmax(cylinder->radiusTop, cylinder->radiusBottom); // Take the larger of the two radii
+    // Use the largest radius between the top and bottom
+    float maxRadius = fmaxf(cylinder->radiusTop, cylinder->radiusBottom);
+
+    // Adjust Y to align the bottom of the bounding box with the cylinder's position
     Vector3 min = {
-        cylinder->position.x - maxRadius,
-        cylinder->position.y - cylinder->height / 2.0f,
+        cylinder->position.x - maxRadius, 
+        cylinder->position.y - cylinder->height / 28.0f, // Min Y (aligns bottom of cylinder to bounding box)
         cylinder->position.z - maxRadius
     };
     Vector3 max = {
-        cylinder->position.x + maxRadius,
-        cylinder->position.y + cylinder->height / 2.0f,
+        cylinder->position.x + maxRadius, 
+        cylinder->position.y + cylinder->height, // 2.0f, // Max Y (aligns top of cylinder to bounding box)
         cylinder->position.z + maxRadius
     };
+
     cylinder->boundingBox = (BoundingBox){ min, max };
 }
 
@@ -604,22 +617,17 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                     Color cubecolor = HSLToRGB(cubehue, saturation, lightness);
                     DrawRectangle(1630, 100, 50, 20, cubecolor);
 
+                // Checkbox to enable or disable collision
+                GuiCheckBox((Rectangle){panelX + 130, 125, 20, 20}, "Enable Collision", &cubeCollisionActive);
+
                  // Create Cube
                 if (GuiButton((Rectangle){ 1340, 50, 100, 50 }, "Cube")) {
                     // DrawText("Cube Created", 100, 200, 20, RED);
                     AddCube((Vector3){ cubeposx, cubeposy, cubeposz }, {cubesizex, cubesizey, cubesizez}, cubecolor);
-                    UpdateCubeBoundingBox(&cubes[cubeCount - 1]);
+                    cubes[cubeCount - 1].collisionActive = cubeCollisionActive; // Set collision state
+                    UpdateCubeBoundingBox(&cubes[cubeCount - 1]); // Update bounding box
                 }
-                    
-
-                // Checkbox to enable collision for the last created Cube
-                // if (cubeCount > 0) {
-                //     if (GuiCheckBox((Rectangle){ 1345, 110, 30, 30 }, " ", &cubes[cubeCount - 1].collisionActive)) {
-                //         // Toggle collisionActive for the last created cube
-                //     }
-                //     DrawText("Enable Collision", 1385, 110, 20, WHITE); // Text to the right of the checkbox
-                // }
-                
+                                    
                 //Sphere
                 GuiLabel((Rectangle){panelX + 130, 150, 100, 20}, "Position:");
                     for (int i = 0; i < 3; i++) {
@@ -648,21 +656,16 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                     Color spherecolor = HSLToRGB(spherehue, saturation, lightness);
                     DrawRectangle(1630, 200, 50, 20, spherecolor);
 
+                    // Checkbox for collision
+                    GuiCheckBox((Rectangle){panelX + 130, 225, 20, 20}, "Enable Collision", &sphereCollisionActive);
+
                 // Create Sphere
                 if (GuiButton((Rectangle){ 1340, 150, 100, 50 }, "Sphere")) {
                     AddSphere((Vector3){ sphereposx, sphereposy, sphereposz }, sphererad, spherecolor);
-                    UpdateSphereBoundingBox(&spheres[sphereCount - 1]);
+                    spheres[sphereCount - 1].collisionActive = sphereCollisionActive; // Apply collision state
+                    UpdateSphereBoundingBox(&spheres[sphereCount - 1]); // Update bounding box
                 }
     
-                // Checkbox to enable collision for the last created Sphere
-                // if (sphereCount > 0) {
-                //     if (GuiCheckBox((Rectangle){ 1345, 210, 30, 30 }, " ", &spheres[sphereCount - 1].collisionActive)) {
-                //         // Toggle collisionActive for the last created sphere
-                //     }
-                //     DrawText("Enable Collision", 1385, 210, 20, WHITE); // Text to the right of the checkbox
-                // }
-                
-
                 //cylinder
                 GuiLabel((Rectangle){panelX + 130, 250, 100, 20}, "Position:");
                     for (int i = 0; i < 3; i++) {
@@ -711,20 +714,17 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 GuiSlider((Rectangle){(float)(panelX + 200), 350.0f, 105.0f, 20.0f}, "Hue", NULL, &cylinderhue, 0, 360);
                 Color cylindercolor = HSLToRGB(cylinderhue, saturation, lightness);
                 DrawRectangle(1630, 350, 50, 20, cylindercolor);
+
+                // Checkbox for collision
+                GuiCheckBox((Rectangle){panelX + 130, 375, 20, 20}, "Enable Collision", &cylinderCollisionActive);
+
                 // Create Cylinder
                 if (GuiButton((Rectangle){ 1340, 250, 100, 50 }, "Cylinder")) {
                     AddCylinder((Vector3){cylinderposx, cylinderposy, cylinderposz }, 
                     cylinderradtop, cylinderradbottom, cylinderheight, cylinderslices, cylindercolor);
-                    UpdateCylinderBoundingBox(&cylinders[cylinderCount - 1]);
+                    cylinders[cylinderCount - 1].collisionActive = cylinderCollisionActive; // Apply collision state
+                    UpdateCylinderBoundingBox(&cylinders[cylinderCount - 1]); // Update bounding box
                 }
-                
-                // Checkbox to enable collision for the last created Cylinder
-                // if (cylinderCount > 0) {
-                //     if (GuiCheckBox((Rectangle){ 1345, 310, 30, 30 }, " ", &cylinders[cylinderCount - 1].collisionActive)) {
-                //         // Toggle collisionActive for the last created cylinder
-                //     }
-                //     DrawText("Enable Collision", 1385, 310, 20, WHITE); // Text to the right of the checkbox
-                // }
                 
                 //capsule
             GuiLabel((Rectangle){panelX + 150, 400, 100, 20}, "Pos 1:");
@@ -783,22 +783,19 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 GuiSlider((Rectangle){(float)(panelX + 200), 525.0f, 105.0f, 20.0f}, "Hue", NULL, &capsulehue, 0, 360);
                 Color capsulecolor = HSLToRGB(capsulehue, saturation, lightness);
                 DrawRectangle(1630, 525, 50, 20, capsulecolor);
+
+                // Checkbox for collision
+                GuiCheckBox((Rectangle){panelX + 130, 550, 20, 20}, "Enable Collision", &capsuleCollisionActive);
+
                 // Create Capsule
                 if (GuiButton((Rectangle){ 1340, 400, 100, 50 }, "Capsule")) {
                     DrawText("Capsule Created", 100, 200, 20, RED);
                     AddCapsule((Vector3){ capsulestartposx, capsulestartposy, capsulestartposz }, 
                     (Vector3){ capsuleendposx, capsuleendposy, capsuleendposz }, capsulerad, capsuleslices, capsulering, capsulecolor);
-                    UpdateCapsuleBoundingBox(&capsules[capsuleCount - 1]);
+                    capsules[capsuleCount - 1].collisionActive = capsuleCollisionActive; // Apply collision state
+                    UpdateCapsuleBoundingBox(&capsules[capsuleCount - 1]); // Update bounding box
                 }
     
-                // Checkbox to enable collision for the last created Capsule
-                // if (capsuleCount > 0) {
-                //     if (GuiCheckBox((Rectangle){ 1345, 410, 30, 30 }, " ", &capsules[capsuleCount - 1].collisionActive)) {
-                //         // Toggle collisionActive for the last created capsule
-                //     }
-                //     DrawText("Enable Collision", 1385, 410, 20, WHITE); // Text to the right of the checkbox
-                // }
-                
                 //plane
                 GuiLabel((Rectangle){panelX + 130, 575, 100, 20}, "Position:");
                     for (int i = 0; i < 3; i++) {
@@ -828,20 +825,17 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                 GuiSlider((Rectangle){(float)(panelX + 200), 625.0f, 105.0f, 20.0f}, "Hue", NULL, &planehue, 0, 360);
                 Color planecolor = HSLToRGB(planehue, saturation, lightness);
                 DrawRectangle(1630, 625, 50, 20, planecolor);
+
+                // Checkbox for collision
+                GuiCheckBox((Rectangle){panelX + 130, 650, 20, 20}, "Enable Collision", &planeCollisionActive);
+
                 // Create Plane
                 if (GuiButton((Rectangle){ 1340, 575, 100, 50 }, "Plane")) {
                     DrawText("Plane Created", 100, 200, 20, RED);
                     AddPlane((Vector3){ planeposx, planeposy, planeposz }, (Vector2){ planesizex, planesizey }, planecolor);
-                    UpdatePlaneBoundingBox(&planes[planeCount - 1]);
+                    planes[planeCount - 1].collisionActive = planeCollisionActive; // Apply collision state
+                    UpdatePlaneBoundingBox(&planes[planeCount - 1]); // Update bounding box
                 }
-    
-                // Checkbox to enable collision for the last created Plane
-                // if (planeCount > 0) {
-                //     if (GuiCheckBox((Rectangle){ 1345, 510, 30, 30 }, " ", &planes[planeCount - 1].collisionActive)) {
-                //         // Toggle collisionActive for the last created plane
-                //     }
-                //     DrawText("Enable Collision", 1385, 510, 20, WHITE); // Text to the right of the checkbox
-                // }
 
                 DrawText("F1 to Exit SHAPE CREATION Mode", panelX + 10, screenHeight - 30, 20, WHITE);
             } break;
@@ -1626,25 +1620,20 @@ int main()
 
         // Draw shapes based on the state set by button clicks
         for (int i = 0; i < cubeCount; i++) {
-            if (cubes[i].collisionActive) {
+            if (cubes[i].collisionActive)
                 DrawBoundingBox(cubes[i].boundingBox, RED); // Use stored bounding box
-            } else {
                 DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
-            }
         }
 
         for (int i = 0; i < sphereCount; i++) {
-            if (spheres[i].collisionActive) {
+            if (spheres[i].collisionActive) 
                 DrawBoundingBox(spheres[i].boundingBox, RED); // Use stored bounding box
-            } else {
                 DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
-            }
         }
 
         for (int i = 0; i < cylinderCount; i++) {
-            if (cylinders[i].collisionActive) {
+            if (cylinders[i].collisionActive) 
                 DrawBoundingBox(cylinders[i].boundingBox, RED); // Highlight the bounding box
-            } else {
                 DrawCylinder(
                     cylinders[i].position,
                     cylinders[i].radiusTop,
@@ -1653,13 +1642,11 @@ int main()
                     cylinders[i].slices,
                     cylinders[i].color
                 );
-            }
         }
 
         for (int i = 0; i < capsuleCount; i++) {
-            if (capsules[i].collisionActive) {
+            if (capsules[i].collisionActive)
                 DrawBoundingBox(capsules[i].boundingBox, RED); // Highlight the bounding box
-            } else {
                 DrawCapsule(
                     capsules[i].startPos,
                     capsules[i].endPos,
@@ -1668,19 +1655,16 @@ int main()
                     capsules[i].rings,
                     capsules[i].color
                 );
-            }
         }
 
         for (int i = 0; i < planeCount; i++) {
-            if (planes[i].collisionActive) {
+            if (planes[i].collisionActive) 
                 DrawBoundingBox(planes[i].boundingBox, RED); // Highlight the bounding box
-            } else {
                 DrawPlane(
                     planes[i].position,
                     planes[i].size,
                     planes[i].color
                 );
-            }
         }
 
         for (int i = 0; i < modelCount; i++) {
