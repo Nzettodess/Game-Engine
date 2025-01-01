@@ -1522,7 +1522,7 @@ int main()
         Vector3 rayOrigin = GetMouseRay(GetMousePosition(), camera).position;
         Vector3 rayDirection = GetMouseRay(GetMousePosition(), camera).direction;
 
-        isMouseInGUI = CheckCollisionPointRec(GetMousePosition(), (Rectangle){10, 10, 250, 300});
+        isMouseInGUI = CheckCollisionPointRec(GetMousePosition(), (Rectangle){screenWidth - 400, 0, 400, screenHeight});
 
         // Handle file drop
         if (IsFileDropped()) {
