@@ -203,7 +203,6 @@ bool CheckCollisionBetweenBoundingBoxes(BoundingBox box1, BoundingBox box2) {
     return CheckBoundingBoxCollision(box1, box2); // Pass addresses of box1 and box2
 }
 
-
 //global data 
 float saturation = 1.0f;      // Saturation: 0-1
 float lightness = 0.5f;       // Lightness: 0-1
@@ -674,6 +673,8 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
             {
                 //DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
                 GuiPanel((Rectangle){panelX + 10, 10, 380, 750}, "Shape Creation Mode");
+                DrawText("A collision active shapes will have bounding box in red color surounding them", panelX - 1300, 10, 20, BLACK);
+                DrawText("If shapes with active collision collided, they will turn red", panelX - 1300, 40, 20, BLACK);
 
                     //Cube
                     GuiLabel((Rectangle){panelX + 130, 50, 100, 20}, "Position:");
@@ -1707,321 +1708,272 @@ int main()
         // Begin 3D mode for the game scene
         BeginMode3D(camera);
 
-        // Draw shapes based on the state set by button clicks
-        // for (int i = 0; i < cubeCount; i++) {
-        //     if (cubes[i].collisionActive)
-        //         DrawBoundingBox(cubes[i].boundingBox, RED); // Use stored bounding box
-        //         DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
-        // }
+        // Iterate through cubes and check for collisions with any other shape
+        for (int i = 0; i < cubeCount; i++) {
+            // Always draw the cube, regardless of collision state
+            DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
 
-        // for (int i = 0; i < sphereCount; i++) {
-        //     if (spheres[i].collisionActive) 
-        //         DrawBoundingBox(spheres[i].boundingBox, RED); // Use stored bounding box
-        //         DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
-        // }
+            // Draw the bounding box only when collision is active
+            if (cubes[i].collisionActive) {
+                DrawBoundingBox(cubes[i].boundingBox, RED); // Draw bounding box in red (or any color for active collision)
+            }
 
-        // for (int i = 0; i < cylinderCount; i++) {
-        //     if (cylinders[i].collisionActive) 
-        //         DrawBoundingBox(cylinders[i].boundingBox, RED); // Highlight the bounding box
-        //         DrawCylinder(
-        //             cylinders[i].position,
-        //             cylinders[i].radiusTop,
-        //             cylinders[i].radiusBottom,
-        //             cylinders[i].height,
-        //             cylinders[i].slices,
-        //             cylinders[i].color
-        //         );
-        // }
+            // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = 0; j < sphereCount; j++) {
+                if (spheres[j].collisionActive && cubes[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(cubes[i].boundingBox, spheres[j].boundingBox)) {
+                        cubes[i].color = RED; // Change color on collision
+                        spheres[j].color = RED; // Change color on collision
+                    }
+                }
+            }
 
-        // for (int i = 0; i < capsuleCount; i++) {
-        //     if (capsules[i].collisionActive)
-        //         DrawBoundingBox(capsules[i].boundingBox, RED); // Highlight the bounding box
-        //         DrawCapsule(
-        //             capsules[i].startPos,
-        //             capsules[i].endPos,
-        //             capsules[i].radius,
-        //             capsules[i].slices,
-        //             capsules[i].rings,
-        //             capsules[i].color
-        //         );
-        // }
+            for (int j = 0; j < cylinderCount; j++) {
+                if (cylinders[j].collisionActive && cubes[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(cubes[i].boundingBox, cylinders[j].boundingBox)) {
+                        cubes[i].color = RED; // Change color on collision
+                        cylinders[j].color = RED; // Change color on collision
+                    }
+                }
+            }
 
-        // for (int i = 0; i < planeCount; i++) {
-        //     if (planes[i].collisionActive) 
-        //         DrawBoundingBox(planes[i].boundingBox, RED); // Highlight the bounding box
-        //         DrawPlane(
-        //             planes[i].position,
-        //             planes[i].size,
-        //             planes[i].color
-        //         );
-        // }
+            for (int j = 0; j < capsuleCount; j++) {
+                if (capsules[j].collisionActive && cubes[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(cubes[i].boundingBox, capsules[j].boundingBox)) {
+                        cubes[i].color = RED; // Change color on collision
+                        capsules[j].color = RED; // Change color on collision
+                    }
+                }
+            }
 
-// Iterate through cubes and check for collisions with any other shape
-for (int i = 0; i < cubeCount; i++) {
-    // Always draw the cube, regardless of collision state
-    DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
-
-    // Draw the bounding box only when collision is active
-    if (cubes[i].collisionActive) {
-        DrawBoundingBox(cubes[i].boundingBox, RED); // Draw bounding box in red (or any color for active collision)
-    }
-
-    // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
-    for (int j = 0; j < sphereCount; j++) {
-        if (spheres[j].collisionActive && cubes[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(cubes[i].boundingBox, spheres[j].boundingBox)) {
-                cubes[i].color = RED; // Change color on collision
-                spheres[j].color = RED; // Change color on collision
+            for (int j = 0; j < planeCount; j++) {
+                if (planes[j].collisionActive && cubes[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(cubes[i].boundingBox, planes[j].boundingBox)) {
+                        cubes[i].color = RED; // Change color on collision
+                        planes[j].color = RED; // Change color on collision
+                    }
+                }
             }
         }
-    }
 
-    for (int j = 0; j < cylinderCount; j++) {
-        if (cylinders[j].collisionActive && cubes[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(cubes[i].boundingBox, cylinders[j].boundingBox)) {
-                cubes[i].color = RED; // Change color on collision
-                cylinders[j].color = RED; // Change color on collision
+        // Similarly for spheres, cylinders, capsules, and planes, just treat them like bounding boxes:
+
+        // Iterate through spheres
+        for (int i = 0; i < sphereCount; i++) {
+            // Always draw the sphere, regardless of collision state
+            DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
+
+            // Draw the bounding box only when collision is active
+            if (spheres[i].collisionActive) {
+                DrawBoundingBox(spheres[i].boundingBox, RED); // Draw bounding box in red
+            }
+
+            // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = 0; j < cubeCount; j++) {
+                if (cubes[j].collisionActive && spheres[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(spheres[i].boundingBox, cubes[j].boundingBox)) {
+                        spheres[i].color = RED; // Change color on collision
+                        cubes[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < cylinderCount; j++) {
+                if (cylinders[j].collisionActive && spheres[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(spheres[i].boundingBox, cylinders[j].boundingBox)) {
+                        spheres[i].color = RED; // Change color on collision
+                        cylinders[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < capsuleCount; j++) {
+                if (capsules[j].collisionActive && spheres[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(spheres[i].boundingBox, capsules[j].boundingBox)) {
+                        spheres[i].color = RED; // Change color on collision
+                        capsules[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < planeCount; j++) {
+                if (planes[j].collisionActive && spheres[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(spheres[i].boundingBox, planes[j].boundingBox)) {
+                        spheres[i].color = RED; // Change color on collision
+                        planes[j].color = RED; // Change color on collision
+                    }
+                }
             }
         }
-    }
 
-    for (int j = 0; j < capsuleCount; j++) {
-        if (capsules[j].collisionActive && cubes[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(cubes[i].boundingBox, capsules[j].boundingBox)) {
-                cubes[i].color = RED; // Change color on collision
-                capsules[j].color = RED; // Change color on collision
+        // Repeat the same approach for cylinders, capsules, and planes
+
+        // Iterate through cylinders
+        for (int i = 0; i < cylinderCount; i++) {
+            // Always draw the cylinder, regardless of collision state
+            DrawCylinder(
+                cylinders[i].position,
+                cylinders[i].radiusTop,
+                cylinders[i].radiusBottom,
+                cylinders[i].height,
+                cylinders[i].slices,
+                cylinders[i].color
+            );
+
+            // Draw the bounding box only when collision is active
+            if (cylinders[i].collisionActive) {
+                DrawBoundingBox(cylinders[i].boundingBox, RED); // Draw bounding box in red
+            }
+
+            // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = 0; j < cubeCount; j++) {
+                if (cubes[j].collisionActive && cylinders[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(cylinders[i].boundingBox, cubes[j].boundingBox)) {
+                        cylinders[i].color = RED; // Change color on collision
+                        cubes[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < sphereCount; j++) {
+                if (spheres[j].collisionActive && cylinders[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(cylinders[i].boundingBox, spheres[j].boundingBox)) {
+                        cylinders[i].color = RED; // Change color on collision
+                        spheres[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < capsuleCount; j++) {
+                if (capsules[j].collisionActive && cylinders[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(cylinders[i].boundingBox, capsules[j].boundingBox)) {
+                        cylinders[i].color = RED; // Change color on collision
+                        capsules[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < planeCount; j++) {
+                if (planes[j].collisionActive && cylinders[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(cylinders[i].boundingBox, planes[j].boundingBox)) {
+                        cylinders[i].color = RED; // Change color on collision
+                        planes[j].color = RED; // Change color on collision
+                    }
+                }
             }
         }
-    }
 
-    for (int j = 0; j < planeCount; j++) {
-        if (planes[j].collisionActive && cubes[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(cubes[i].boundingBox, planes[j].boundingBox)) {
-                cubes[i].color = RED; // Change color on collision
-                planes[j].color = RED; // Change color on collision
+        // Iterate through capsules
+        for (int i = 0; i < capsuleCount; i++) {
+            // Always draw the capsule, regardless of collision state
+            DrawCapsule(
+                capsules[i].startPos,
+                capsules[i].endPos,
+                capsules[i].radius,
+                capsules[i].slices,
+                capsules[i].rings,
+                capsules[i].color
+            );
+
+            // Draw the bounding box only when collision is active
+            if (capsules[i].collisionActive) {
+                DrawBoundingBox(capsules[i].boundingBox, RED); // Draw bounding box in red
+            }
+
+            // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = 0; j < cubeCount; j++) {
+                if (cubes[j].collisionActive && capsules[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(capsules[i].boundingBox, cubes[j].boundingBox)) {
+                        capsules[i].color = RED; // Change color on collision
+                        cubes[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < sphereCount; j++) {
+                if (spheres[j].collisionActive && capsules[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(capsules[i].boundingBox, spheres[j].boundingBox)) {
+                        capsules[i].color = RED; // Change color on collision
+                        spheres[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < cylinderCount; j++) {
+                if (cylinders[j].collisionActive && capsules[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(capsules[i].boundingBox, cylinders[j].boundingBox)) {
+                        capsules[i].color = RED; // Change color on collision
+                        cylinders[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < planeCount; j++) {
+                if (planes[j].collisionActive && capsules[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(capsules[i].boundingBox, planes[j].boundingBox)) {
+                        capsules[i].color = RED; // Change color on collision
+                        planes[j].color = RED; // Change color on collision
+                    }
+                }
             }
         }
-    }
-}
 
-// Similarly for spheres, cylinders, capsules, and planes, just treat them like bounding boxes:
+        // Iterate through planes
+        for (int i = 0; i < planeCount; i++) {
+            // Always draw the plane, regardless of collision state
+            DrawPlane(planes[i].position, planes[i].size, planes[i].color);
 
-// Iterate through spheres
-for (int i = 0; i < sphereCount; i++) {
-    // Always draw the sphere, regardless of collision state
-    DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
+            // Draw the bounding box only when collision is active
+            if (planes[i].collisionActive) {
+                DrawBoundingBox(planes[i].boundingBox, RED); // Draw bounding box in red
+            }
 
-    // Draw the bounding box only when collision is active
-    if (spheres[i].collisionActive) {
-        DrawBoundingBox(spheres[i].boundingBox, RED); // Draw bounding box in red
-    }
+            // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = 0; j < cubeCount; j++) {
+                if (cubes[j].collisionActive && planes[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, cubes[j].boundingBox)) {
+                        planes[i].color = RED; // Change color on collision
+                        cubes[j].color = RED; // Change color on collision
+                    }
+                }
+            }
 
-    // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
-    for (int j = 0; j < cubeCount; j++) {
-        if (cubes[j].collisionActive && spheres[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(spheres[i].boundingBox, cubes[j].boundingBox)) {
-                spheres[i].color = RED; // Change color on collision
-                cubes[j].color = RED; // Change color on collision
+            for (int j = 0; j < sphereCount; j++) {
+                if (spheres[j].collisionActive && planes[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, spheres[j].boundingBox)) {
+                        planes[i].color = RED; // Change color on collision
+                        spheres[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < cylinderCount; j++) {
+                if (cylinders[j].collisionActive && planes[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, cylinders[j].boundingBox)) {
+                        planes[i].color = RED; // Change color on collision
+                        cylinders[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < capsuleCount; j++) {
+                if (capsules[j].collisionActive && planes[i].collisionActive) {
+                    if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, capsules[j].boundingBox)) {
+                        planes[i].color = RED; // Change color on collision
+                        capsules[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
+            for (int j = 0; j < planeCount; j++) {
+                if (planes[j].collisionActive && planes[i].collisionActive && i != j) {
+                    if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, planes[j].boundingBox)) {
+                        planes[i].color = RED; // Change color on collision
+                        planes[j].color = RED; // Change color on collision
+                    }
+                }
             }
         }
-    }
-
-    for (int j = 0; j < cylinderCount; j++) {
-        if (cylinders[j].collisionActive && spheres[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(spheres[i].boundingBox, cylinders[j].boundingBox)) {
-                spheres[i].color = RED; // Change color on collision
-                cylinders[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < capsuleCount; j++) {
-        if (capsules[j].collisionActive && spheres[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(spheres[i].boundingBox, capsules[j].boundingBox)) {
-                spheres[i].color = RED; // Change color on collision
-                capsules[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < planeCount; j++) {
-        if (planes[j].collisionActive && spheres[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(spheres[i].boundingBox, planes[j].boundingBox)) {
-                spheres[i].color = RED; // Change color on collision
-                planes[j].color = RED; // Change color on collision
-            }
-        }
-    }
-}
-
-// Repeat the same approach for cylinders, capsules, and planes
-
-// Iterate through cylinders
-for (int i = 0; i < cylinderCount; i++) {
-    // Always draw the cylinder, regardless of collision state
-    DrawCylinder(
-        cylinders[i].position,
-        cylinders[i].radiusTop,
-        cylinders[i].radiusBottom,
-        cylinders[i].height,
-        cylinders[i].slices,
-        cylinders[i].color
-    );
-
-    // Draw the bounding box only when collision is active
-    if (cylinders[i].collisionActive) {
-        DrawBoundingBox(cylinders[i].boundingBox, RED); // Draw bounding box in red
-    }
-
-    // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
-    for (int j = 0; j < cubeCount; j++) {
-        if (cubes[j].collisionActive && cylinders[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(cylinders[i].boundingBox, cubes[j].boundingBox)) {
-                cylinders[i].color = RED; // Change color on collision
-                cubes[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < sphereCount; j++) {
-        if (spheres[j].collisionActive && cylinders[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(cylinders[i].boundingBox, spheres[j].boundingBox)) {
-                cylinders[i].color = RED; // Change color on collision
-                spheres[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < capsuleCount; j++) {
-        if (capsules[j].collisionActive && cylinders[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(cylinders[i].boundingBox, capsules[j].boundingBox)) {
-                cylinders[i].color = RED; // Change color on collision
-                capsules[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < planeCount; j++) {
-        if (planes[j].collisionActive && cylinders[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(cylinders[i].boundingBox, planes[j].boundingBox)) {
-                cylinders[i].color = RED; // Change color on collision
-                planes[j].color = RED; // Change color on collision
-            }
-        }
-    }
-}
-
-// Iterate through capsules
-for (int i = 0; i < capsuleCount; i++) {
-    // Always draw the capsule, regardless of collision state
-    DrawCapsule(
-        capsules[i].startPos,
-        capsules[i].endPos,
-        capsules[i].radius,
-        capsules[i].slices,
-        capsules[i].rings,
-        capsules[i].color
-    );
-
-    // Draw the bounding box only when collision is active
-    if (capsules[i].collisionActive) {
-        DrawBoundingBox(capsules[i].boundingBox, RED); // Draw bounding box in red
-    }
-
-    // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
-    for (int j = 0; j < cubeCount; j++) {
-        if (cubes[j].collisionActive && capsules[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(capsules[i].boundingBox, cubes[j].boundingBox)) {
-                capsules[i].color = RED; // Change color on collision
-                cubes[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < sphereCount; j++) {
-        if (spheres[j].collisionActive && capsules[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(capsules[i].boundingBox, spheres[j].boundingBox)) {
-                capsules[i].color = RED; // Change color on collision
-                spheres[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < cylinderCount; j++) {
-        if (cylinders[j].collisionActive && capsules[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(capsules[i].boundingBox, cylinders[j].boundingBox)) {
-                capsules[i].color = RED; // Change color on collision
-                cylinders[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < planeCount; j++) {
-        if (planes[j].collisionActive && capsules[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(capsules[i].boundingBox, planes[j].boundingBox)) {
-                capsules[i].color = RED; // Change color on collision
-                planes[j].color = RED; // Change color on collision
-            }
-        }
-    }
-}
-
-// Iterate through planes
-for (int i = 0; i < planeCount; i++) {
-    // Always draw the plane, regardless of collision state
-    DrawPlane(planes[i].position, planes[i].size, planes[i].color);
-
-    // Draw the bounding box only when collision is active
-    if (planes[i].collisionActive) {
-        DrawBoundingBox(planes[i].boundingBox, RED); // Draw bounding box in red
-    }
-
-    // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
-    for (int j = 0; j < cubeCount; j++) {
-        if (cubes[j].collisionActive && planes[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, cubes[j].boundingBox)) {
-                planes[i].color = RED; // Change color on collision
-                cubes[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < sphereCount; j++) {
-        if (spheres[j].collisionActive && planes[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, spheres[j].boundingBox)) {
-                planes[i].color = RED; // Change color on collision
-                spheres[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < cylinderCount; j++) {
-        if (cylinders[j].collisionActive && planes[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, cylinders[j].boundingBox)) {
-                planes[i].color = RED; // Change color on collision
-                cylinders[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < capsuleCount; j++) {
-        if (capsules[j].collisionActive && planes[i].collisionActive) {
-            if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, capsules[j].boundingBox)) {
-                planes[i].color = RED; // Change color on collision
-                capsules[j].color = RED; // Change color on collision
-            }
-        }
-    }
-
-    for (int j = 0; j < planeCount; j++) {
-        if (planes[j].collisionActive && planes[i].collisionActive && i != j) {
-            if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, planes[j].boundingBox)) {
-                planes[i].color = RED; // Change color on collision
-                planes[j].color = RED; // Change color on collision
-            }
-        }
-    }
-}
 
 
         for (int i = 0; i < modelCount; i++) {
