@@ -1649,7 +1649,6 @@ int main()
                 Vector2 mouseDelta = GetMouseDelta();  // Get the mouse delta
                 DisableCursor();
                 
-
                 // Orbiting: Rotate camera around the target
                     Vector3 direction = Vector3Subtract(camera.position, camera.target);
 
@@ -1664,31 +1663,8 @@ int main()
                     // Update camera position based on the rotated direction
                     camera.position = Vector3Add(camera.target, direction);
 
-                    // Prevent excessive pitch (clamping vertical rotation)
-                    //if (fabsf(Vector3Angle(direction, camera.up) - PI/2) > PI/3) {
-                    //    camera.position.y = camera.target.y; // Reset to avoid flipping
-                    //}
-
                 // Update camera projection for movement
-                UpdateCameraPro(&camera,
-                (Vector3){
-                    (IsKeyDown(KEY_W)) * 0.1f - (IsKeyDown(KEY_S)) * 0.1f,  // Move forward-backward
-                    (IsKeyDown(KEY_D)) * 0.1f - (IsKeyDown(KEY_A)) * 0.1f,  // Move right-left
-                    0.0f  // Move up-down
-                },
-                (Vector3){ 0.0f, 0.0f, 0.0f },  // No rotation (set all to 0)
-                GetMouseWheelMove() * 2.0f  // Adjust camera zoom based on mouse wheel movement
-                );
-
-                // Camera movement along the y-axis when Q and E are pressed (up and down)
-                if (IsKeyDown(KEY_Q)) {
-                    camera.position.y -= 0.1f;  // Move the camera downwards
-                    camera.target.y -= 0.1f;
-                }
-                if (IsKeyDown(KEY_E)) {
-                    camera.position.y += 0.1f;  // Move the camera upwards
-                    camera.target.y += 0.1f;
-                }
+                UpdateCamera(&camera, CAMERA_THIRD_PERSON); 
 
                 //Exit Mode
                 if (IsKeyPressed(KEY_F1)){
@@ -1987,6 +1963,13 @@ int main()
                 DrawBoundingBox(models[i].bounds, GREEN);
                 DrawAxisArrows(models[i].position, 100.0f);
             }
+        }
+
+         // Draw player cube
+        if (currentMode == TEST)
+        {
+            DrawCube(camera.target, 0.5f, 0.5f, 0.5f, PURPLE);
+            DrawCubeWires(camera.target, 0.5f, 0.5f, 0.5f, DARKPURPLE);
         }
 
         // Draw grid in 3D space
