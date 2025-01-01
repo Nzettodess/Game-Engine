@@ -602,9 +602,9 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                     }
                     GuiLabel((Rectangle){panelX + 160, 75, 100, 20}, "Size:");
                     for (int i = 0; i < 3; i++) {
-                        if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 75, 50, 20}, cubesizeInputs[i], 32, cubepositionEdit[i])) {
-                            cubepositionEdit[i] = !cubepositionEdit[i]; // Toggle edit state
-                            if (!cubepositionEdit[i]) { // If edit finished, update value
+                        if (GuiTextBox((Rectangle){panelX + 200 + (i * 55), 75, 50, 20}, cubesizeInputs[i], 32, cubesizeEdit[i])) {
+                            cubesizeEdit[i] = !cubesizeEdit[i]; // Toggle edit state
+                            if (!cubesizeEdit[i]) { // If edit finished, update value
                                 switch (i) {
                                     case 0: cubesizex = atof(cubesizeInputs[i]); break;
                                     case 1: cubesizey = atof(cubesizeInputs[i]); break;
