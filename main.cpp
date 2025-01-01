@@ -1125,11 +1125,11 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                     }
                 }
             } break;
-            case COLLISION:
-            {
-                DrawText("Collision Mode", panelX + 10, 10, 20, WHITE);
-                DrawText("F1 to Exit Collision Mode", panelX + 10, screenHeight - 30, 20, WHITE);
-            } break;
+            // case COLLISION:
+            // {
+            //     DrawText("Collision Mode", panelX + 10, 10, 20, WHITE);
+            //     DrawText("F1 to Exit Collision Mode", panelX + 10, screenHeight - 30, 20, WHITE);
+            // } break;
             case ASSET_MANAGEMENT:
             {
                 DrawText("Asset Management Mode", panelX + 10, 10, 20, WHITE);
@@ -1312,9 +1312,9 @@ int main()
                 }
 
                  //Collision Mode
-                 if(IsKeyPressed(KEY_C)){
-                    currentMode = COLLISION;
-                }
+                //  if(IsKeyPressed(KEY_C)){
+                //     currentMode = COLLISION;
+                // }
 
                  //Asset Management Mode
                  if(IsKeyPressed(KEY_X)){
