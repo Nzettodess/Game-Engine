@@ -1754,16 +1754,17 @@ int main()
        // Check collision for all shapes by comparing bounding boxes
 // Iterate through cubes and check for collisions
 for (int i = 0; i < cubeCount; i++) {
+    // Always draw the cube, regardless of collision state
+    DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
+
     // Draw the bounding box only when collision is active
     if (cubes[i].collisionActive) {
         DrawBoundingBox(cubes[i].boundingBox, RED); // Draw bounding box in red (or any color for active collision)
     }
-    // Always draw the cube
-    DrawCube(cubes[i].position, cubes[i].size.x, cubes[i].size.y, cubes[i].size.z, cubes[i].color);
 
-    // Check for collisions with other cubes
+    // Check for collisions with other cubes only if both are collision active
     for (int j = i + 1; j < cubeCount; j++) {
-        if (cubes[j].collisionActive) {
+        if (cubes[j].collisionActive && cubes[i].collisionActive) {
             if (CheckBoundingBoxCollision(cubes[i].boundingBox, cubes[j].boundingBox)) {
                 cubes[i].color = RED; // Change color on collision
                 cubes[j].color = RED; // Change color on collision
@@ -1774,16 +1775,17 @@ for (int i = 0; i < cubeCount; i++) {
 
 // Iterate through spheres and check for collisions
 for (int i = 0; i < sphereCount; i++) {
+    // Always draw the sphere, regardless of collision state
+    DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
+
     // Draw the bounding box only when collision is active
     if (spheres[i].collisionActive) {
         DrawBoundingBox(spheres[i].boundingBox, RED); // Draw bounding box in red (or any color for active collision)
     }
-    // Always draw the sphere
-    DrawSphere(spheres[i].position, spheres[i].radius, spheres[i].color);
 
-    // Check for collisions with other spheres
+    // Check for collisions with other spheres only if both are collision active
     for (int j = i + 1; j < sphereCount; j++) {
-        if (spheres[j].collisionActive) {
+        if (spheres[j].collisionActive && spheres[i].collisionActive) {
             if (CheckBoundingBoxCollision(spheres[i].boundingBox, spheres[j].boundingBox)) {
                 spheres[i].color = RED; // Change color on collision
                 spheres[j].color = RED; // Change color on collision
@@ -1794,16 +1796,17 @@ for (int i = 0; i < sphereCount; i++) {
 
 // Iterate through cylinders and check for collisions
 for (int i = 0; i < cylinderCount; i++) {
+    // Always draw the cylinder, regardless of collision state
+    DrawCylinder(cylinders[i].position, cylinders[i].radiusTop, cylinders[i].radiusBottom, cylinders[i].height, cylinders[i].slices, cylinders[i].color);
+
     // Draw the bounding box only when collision is active
     if (cylinders[i].collisionActive) {
         DrawBoundingBox(cylinders[i].boundingBox, RED); // Draw bounding box in red (or any color for active collision)
     }
-    // Always draw the cylinder
-    DrawCylinder(cylinders[i].position, cylinders[i].radiusTop, cylinders[i].radiusBottom, cylinders[i].height, cylinders[i].slices, cylinders[i].color);
 
-    // Check for collisions with other cylinders
+    // Check for collisions with other cylinders only if both are collision active
     for (int j = i + 1; j < cylinderCount; j++) {
-        if (cylinders[j].collisionActive) {
+        if (cylinders[j].collisionActive && cylinders[i].collisionActive) {
             if (CheckBoundingBoxCollision(cylinders[i].boundingBox, cylinders[j].boundingBox)) {
                 cylinders[i].color = RED; // Change color on collision
                 cylinders[j].color = RED; // Change color on collision
@@ -1814,16 +1817,17 @@ for (int i = 0; i < cylinderCount; i++) {
 
 // Iterate through capsules and check for collisions
 for (int i = 0; i < capsuleCount; i++) {
+    // Always draw the capsule, regardless of collision state
+    DrawCapsule(capsules[i].startPos, capsules[i].endPos, capsules[i].radius, capsules[i].slices, capsules[i].rings, capsules[i].color);
+
     // Draw the bounding box only when collision is active
     if (capsules[i].collisionActive) {
         DrawBoundingBox(capsules[i].boundingBox, RED); // Draw bounding box in red (or any color for active collision)
     }
-    // Always draw the capsule
-    DrawCapsule(capsules[i].startPos, capsules[i].endPos, capsules[i].radius, capsules[i].slices, capsules[i].rings, capsules[i].color);
 
-    // Check for collisions with other capsules
+    // Check for collisions with other capsules only if both are collision active
     for (int j = i + 1; j < capsuleCount; j++) {
-        if (capsules[j].collisionActive) {
+        if (capsules[j].collisionActive && capsules[i].collisionActive) {
             if (CheckBoundingBoxCollision(capsules[i].boundingBox, capsules[j].boundingBox)) {
                 capsules[i].color = RED; // Change color on collision
                 capsules[j].color = RED; // Change color on collision
@@ -1834,16 +1838,17 @@ for (int i = 0; i < capsuleCount; i++) {
 
 // Iterate through planes and check for collisions
 for (int i = 0; i < planeCount; i++) {
+    // Always draw the plane, regardless of collision state
+    DrawPlane(planes[i].position, planes[i].size, planes[i].color);
+
     // Draw the bounding box only when collision is active
     if (planes[i].collisionActive) {
         DrawBoundingBox(planes[i].boundingBox, RED); // Draw bounding box in red (or any color for active collision)
     }
-    // Always draw the plane
-    DrawPlane(planes[i].position, planes[i].size, planes[i].color);
 
-    // Check for collisions with other planes
+    // Check for collisions with other planes only if both are collision active
     for (int j = i + 1; j < planeCount; j++) {
-        if (planes[j].collisionActive) {
+        if (planes[j].collisionActive && planes[i].collisionActive) {
             if (CheckBoundingBoxCollision(planes[i].boundingBox, planes[j].boundingBox)) {
                 planes[i].color = RED; // Change color on collision
                 planes[j].color = RED; // Change color on collision
