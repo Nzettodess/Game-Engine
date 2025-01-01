@@ -193,6 +193,7 @@ static bool cylinderCollisionActive = false; // Default: collision is disabled
 static bool capsuleCollisionActive = false; // Default: collision is disabled
 static bool planeCollisionActive = false; // Default: collision is disabled
 
+Color boundingboxcolor = GREEN;
 bool CheckBoundingBoxCollision(BoundingBox box1, BoundingBox box2) {
     return (box1.min.x <= box2.max.x && box1.max.x >= box2.min.x) &&
            (box1.min.y <= box2.max.y && box1.max.y >= box2.min.y) &&
@@ -612,15 +613,16 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
 
                 DrawText("Press A to Enter  ", panelX + 10, 100, 20, WHITE);
                 DrawText("SHAPE CREATION Mode", panelX + 10, 120, 20, WHITE);
+                DrawText("with Collision", panelX + 10, 140, 20, WHITE);
 
-                DrawText("Press M to Enter ", panelX + 10, 170, 20, WHITE);
-                DrawText("AUDIO Mode", panelX + 10, 190, 20, WHITE);
+                DrawText("Press M to Enter ", panelX + 10, 190, 20, WHITE);
+                DrawText("AUDIO Mode", panelX + 10, 210, 20, WHITE);
 
-                DrawText("Press C to Enter ", panelX + 10, 240, 20, WHITE);
-                DrawText("COLLISION Mode", panelX + 10, 260, 20, WHITE);
+                // DrawText("Press C to Enter ", panelX + 10, 240, 20, WHITE);
+                // DrawText("COLLISION Mode", panelX + 10, 260, 20, WHITE);
 
-                DrawText("Press X to Enter ", panelX + 10, 310, 20, WHITE);
-                DrawText("ASSET MANAGEMENT Mode", panelX + 10, 330, 20, WHITE);
+                DrawText("Press X to Enter ", panelX + 10, 260, 20, WHITE);
+                DrawText("ASSET MANAGEMENT Mode", panelX + 10, 280, 20, WHITE);
 
                 // DrawText("Press XX to Enter Shape CREATION Mode", panelX + 10, 80, 20, WHITE);
             } break;
@@ -673,8 +675,10 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
             {
                 //DrawText("Shape Creation Mode", panelX + 10, 10, 20, WHITE);
                 GuiPanel((Rectangle){panelX + 10, 10, 380, 750}, "Shape Creation Mode");
-                DrawText("A collision active shapes will have bounding box in red color surounding them", panelX - 1300, 10, 20, BLACK);
-                DrawText("If shapes with active collision collided, they will turn red", panelX - 1300, 40, 20, BLACK);
+                DrawText("Input desired parameter for the geometry before you generate it", panelX - 1300, 10, 20, BLACK);
+                DrawText("When collision enable and Geometry collided, ", panelX - 1300, 40, 20, BLACK);
+                 DrawText("all geometry involved in colliding will be in RED and with GREEN Bounding Box", panelX - 1300, 70, 20, BLACK);
+                // DrawText("If shapes with active collision collided, they will turn red", panelX - 1300, 40, 20, BLACK);
 
                     //Cube
                     GuiLabel((Rectangle){panelX + 130, 50, 100, 20}, "Position:");
@@ -1707,7 +1711,7 @@ int main()
         
         // Begin 3D mode for the game scene
         BeginMode3D(camera);
-
+        Color boundingboxcolor = GREEN;
         // Iterate through cubes and check for collisions with any other shape
         for (int i = 0; i < cubeCount; i++) {
             // Always draw the cube, regardless of collision state
@@ -1715,7 +1719,7 @@ int main()
 
             // Draw the bounding box only when collision is active
             if (cubes[i].collisionActive) {
-                DrawBoundingBox(cubes[i].boundingBox, RED); // Draw bounding box in red (or any color for active collision)
+                DrawBoundingBox(cubes[i].boundingBox, boundingboxcolor); // Draw bounding box in red (or any color for active collision)
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
@@ -1765,7 +1769,7 @@ int main()
 
             // Draw the bounding box only when collision is active
             if (spheres[i].collisionActive) {
-                DrawBoundingBox(spheres[i].boundingBox, RED); // Draw bounding box in red
+                DrawBoundingBox(spheres[i].boundingBox, boundingboxcolor); // Draw bounding box in red
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
@@ -1822,7 +1826,7 @@ int main()
 
             // Draw the bounding box only when collision is active
             if (cylinders[i].collisionActive) {
-                DrawBoundingBox(cylinders[i].boundingBox, RED); // Draw bounding box in red
+                DrawBoundingBox(cylinders[i].boundingBox, boundingboxcolor); // Draw bounding box in red
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
@@ -1877,7 +1881,7 @@ int main()
 
             // Draw the bounding box only when collision is active
             if (capsules[i].collisionActive) {
-                DrawBoundingBox(capsules[i].boundingBox, RED); // Draw bounding box in red
+                DrawBoundingBox(capsules[i].boundingBox, boundingboxcolor); // Draw bounding box in red
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
@@ -1925,7 +1929,7 @@ int main()
 
             // Draw the bounding box only when collision is active
             if (planes[i].collisionActive) {
-                DrawBoundingBox(planes[i].boundingBox, RED); // Draw bounding box in red
+                DrawBoundingBox(planes[i].boundingBox, boundingboxcolor); // Draw bounding box in red
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
