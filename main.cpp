@@ -1699,6 +1699,15 @@ int main()
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = i + 1; j < cubeCount; j++) {
+                if (cubes[j].collisionActive && cubes[i].collisionActive) {
+                    if (CheckBoundingBoxCollision(cubes[i].boundingBox, cubes[j].boundingBox)) {
+                        cubes[i].color = RED; // Change color on collision
+                        cubes[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
             for (int j = 0; j < sphereCount; j++) {
                 if (spheres[j].collisionActive && cubes[i].collisionActive) {
                     if (CheckCollisionBetweenBoundingBoxes(cubes[i].boundingBox, spheres[j].boundingBox)) {
@@ -1749,6 +1758,15 @@ int main()
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = i + 1; j < sphereCount; j++) {
+                if (spheres[j].collisionActive && spheres[i].collisionActive) {
+                    if (CheckBoundingBoxCollision(spheres[i].boundingBox, spheres[j].boundingBox)) {
+                        spheres[i].color = RED; // Change color on collision
+                        spheres[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
             for (int j = 0; j < cubeCount; j++) {
                 if (cubes[j].collisionActive && spheres[i].collisionActive) {
                     if (CheckCollisionBetweenBoundingBoxes(spheres[i].boundingBox, cubes[j].boundingBox)) {
@@ -1806,6 +1824,15 @@ int main()
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = i + 1; j < cylinderCount; j++) {
+                if (cylinders[j].collisionActive && cylinders[i].collisionActive) {
+                    if (CheckBoundingBoxCollision(cylinders[i].boundingBox, cylinders[j].boundingBox)) {
+                        cylinders[i].color = RED; // Change color on collision
+                        cylinders[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
             for (int j = 0; j < cubeCount; j++) {
                 if (cubes[j].collisionActive && cylinders[i].collisionActive) {
                     if (CheckCollisionBetweenBoundingBoxes(cylinders[i].boundingBox, cubes[j].boundingBox)) {
@@ -1861,6 +1888,15 @@ int main()
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = i + 1; j < capsuleCount; j++) {
+                if (capsules[j].collisionActive && capsules[i].collisionActive) {
+                    if (CheckBoundingBoxCollision(capsules[i].boundingBox, capsules[j].boundingBox)) {
+                        capsules[i].color = RED; // Change color on collision
+                        capsules[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
             for (int j = 0; j < cubeCount; j++) {
                 if (cubes[j].collisionActive && capsules[i].collisionActive) {
                     if (CheckCollisionBetweenBoundingBoxes(capsules[i].boundingBox, cubes[j].boundingBox)) {
@@ -1909,6 +1945,15 @@ int main()
             }
 
             // Check for collisions with other shapes (cubes, spheres, cylinders, capsules, planes)
+            for (int j = 0; j < planeCount; j++) {
+                if (planes[j].collisionActive && planes[i].collisionActive && i != j) {
+                    if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, planes[j].boundingBox)) {
+                        planes[i].color = RED; // Change color on collision
+                        planes[j].color = RED; // Change color on collision
+                    }
+                }
+            }
+
             for (int j = 0; j < cubeCount; j++) {
                 if (cubes[j].collisionActive && planes[i].collisionActive) {
                     if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, cubes[j].boundingBox)) {
@@ -1941,15 +1986,6 @@ int main()
                     if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, capsules[j].boundingBox)) {
                         planes[i].color = RED; // Change color on collision
                         capsules[j].color = RED; // Change color on collision
-                    }
-                }
-            }
-
-            for (int j = 0; j < planeCount; j++) {
-                if (planes[j].collisionActive && planes[i].collisionActive && i != j) {
-                    if (CheckCollisionBetweenBoundingBoxes(planes[i].boundingBox, planes[j].boundingBox)) {
-                        planes[i].color = RED; // Change color on collision
-                        planes[j].color = RED; // Change color on collision
                     }
                 }
             }
