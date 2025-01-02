@@ -991,29 +991,13 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
                         }
                     
                         if (GuiButton((Rectangle){ panelX + 300, yPos + 20, 70, 25 }, "Remove")) {
-                            // Only remove the sound at the current index
-                            // if (soundFiles[i].loaded) {
-                            //     UnloadSound(soundFiles[i].sound);
-                        
-                            //     // Reset all properties for this specific index only
-                            //     soundFiles[i].loaded = false;
-                            //     // soundFiles[i].sound = LoadSound("");  // This might generate the warning but is necessary
-                            //     soundFiles[i] = (SoundFile){ 0 };
-                            //     soundFiles[i].volume = 1.0f;
-                            //     soundFiles[i].pitch = 1.0f;
-                            //     soundFiles[i].pan = 0.0f;
-                            //     soundFiles[i].isPlaying = false;
-                            //     soundFiles[i].wasPlaying = false;
-                            //     //memset(soundFiles[i].name, 0, sizeof(soundFiles[i].name));
-                        
-                            //     cout << "Removed sound at index " << i << std::endl;
                             soundToRemove = i;  // Mark this index for removal
                             removedSound = true;
                         
                         }
                                                            
                         // Volume slider
-                        DrawText("Volume", panelX + 10, yPos + 65, 20, WHITE);
+                        DrawText("Volume", panelX + 10, yPos + 45, 20, WHITE);
                         GuiSliderBar((Rectangle){ panelX + 80, yPos + 45, 300, 20 }, NULL, NULL, &soundFiles[i].volume, 0.0f, 1.0f);
                         SetSoundVolume(soundFiles[i].sound, soundFiles[i].volume * masterSoundVolume * masterVolume);
                 
@@ -1212,7 +1196,7 @@ void DrawInfoPane(Mode currentMode, bool& isfileunsupported, float* rotationSpee
             UpdateModelTransform(selectedModel);
 
             //Delete button
-            if (GuiButton((Rectangle){panelX + 20, 330, 100, 30}, "Delete")) {
+            if (GuiButton((Rectangle){panelX + 20, 300, 100, 30}, "Delete")) {
                 UnloadModel(selectedModel->model);
                 if (models[selectedModelIndex].texture.id != 0) {
                     UnloadTexture(models[selectedModelIndex].texture);
