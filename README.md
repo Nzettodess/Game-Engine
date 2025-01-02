@@ -32,4 +32,4 @@ Screenshots:
 ![Screenshot 2025-01-02 161832](https://github.com/user-attachments/assets/ef77bb7f-74a0-4621-8aaa-3af4537347de)
 
 
-Video Short Intro: 
+Video Short Intro: https://youtu.be/YHbN_-Xvmlg
